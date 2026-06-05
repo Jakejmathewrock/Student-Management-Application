@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% block title %}{{ exam.title }} — Applications{% endblock %}
+{% block page_title %}Exam Applications{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'exam_list' %}">Exams</a></li>
+<li class="breadcrumb-item active">{{ exam.title }}</li>
+{% endblock %}
+
+{% block content %}
+<!-- Exam Header -->
+<div class="card" style="margin-bottom:16px;padding:20px 24px;">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap;">
+    <div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+        <span class="badge {% if exam.status == 'open' %}badge-active{% elif exam.status == 'upcoming' %}badge-primary{% elif exam.status == 'completed' %}badge-inactive{% else %}badge-pending{% endif %}" style="font-size:12px;">● {{ exam.get_status_display }}</span>
+        <span class="badge badge-purple">{{ exam.get_exam_type_display }}</span>
+        {% if exam.course %}<span class="badge badge-primary">{{ exam.course }}</span>{% endif %}
+      </div>
+      <h4 style="font-size:20px;font-weight:800;color:var(--text-900);margin-bottom:4px;">{{ exam.title }}</h4>
+      <div style="font-size:13px;color:var(--text-500);">📅 {{ exam.exam_date|date:"l, F d, Y" }} &nbsp;|&nbsp; 🕐 {{ exam.start_time|time:"H:i" }}–{{ exam.end_time|time:"H:i" }} &nbsp;|&nbsp; 📍 {{ exam.venue|default:"TBA" }}</div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:32px;font-weight:900;color:var(--c-success);">₹{{ exam.exam_fee|floatformat:0 }}</div>
+      <div style="font-size:12px;color:var(--text-500);">Exam Fee per student</div>
+      <div style="font-size:14px;font-weight:700;color:var(--c-success);margin-top:4px;">₹{{ stats.fee_collected|floatformat:0 }} collected</div>
+    </div>
+  </div>
+</div>
+
+<!-- Stats Row -->
+<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:20px;">
+  <div class="kpi-card" style="--kpi-color:#3B82F6;--kpi-bg:rgba(59,130,246,0.1);padding:14px 16px;">
+    <div class="kpi-value" style="font-size:24px;">{{ stats.total }}</div>
+    <div class="kpi-label">Total Applied</div>
+  </div>
+  <div class="kpi-card" style="--kpi-color:#F59E0B;--kpi-bg:rgba(245,158,11,0.1);padding:14px 16px;">
+    <div class="kpi-value" style="font-size:24px;color:var(--c-warning);">{{ stats.pending }}</div>
+    <div class="kpi-label">Pending</div>
+  </div>
+  <div class="kpi-card" style="--kpi-color:#22C55E;--kpi-bg:rgba(34,197,94,0.1);padding:14px 16px;">
+    <div class="kpi-value" style="font-size:24px;color:var(--c-success);">{{ stats.approved }}</div>
+    <div class="kpi-label">Approved</div>
+  </div>
+  <div class="kpi-card" style="--kpi-color:#EF4444;--kpi-bg:rgba(239,68,68,0.1);padding:14px 16px;">
+    <div class="kpi-value" style="font-size:24px;color:var(--c-danger);">{{ stats.rejected }}</div>
+    <div class="kpi-label">Rejected</div>
+  </div>
+  <div class="kpi-card" style="--kpi-color:#22C55E;--kpi-bg:rgba(34,197,94,0.1);padding:14px 16px;">
+    <div class="kpi-value" style="font-size:24px;color:var(--c-success);">{{ stats.paid }}</div>
+    <div class="kpi-label">Fee Paid</div>
+  </div>
+  <div class="kpi-card" style="--kpi-color:#06B6D4;--kpi-bg:rgba(6,182,212,0.1);padding:14px 16px;">
+    <div class="kpi-value" style="font-size:24px;color:var(--c-cyan);">{{ stats.seats_left }}</div>
+    <div class="kpi-label">Seats Left</div>
+  </div>
+</div>
+
+<!-- Applications Table -->
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">📋 All Applications</span>
+    <a href="{% url 'exam_edit' exam.pk %}" class="btn btn-sm btn-outline">✏ Edit Exam</a>
+  </div>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Student</th>
+          <th>Applied At</th>
+          <th>Fee Status</th>
+          <th>Fee Paid</th>
+          <th>UPI ID</th>
+          <th>Transaction ID</th>
+          <th>App. Status</th>
+          <th>Hall Ticket</th>
+          <th style="text-align:right;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for app in applications %}
+        <tr>
+          <td>
+            <div class="cell-user">
+              <div class="cell-avatar-placeholder">{{ app.student.full_name|first|upper }}</div>
+              <div>
+                <div class="cell-name">{{ app.student.full_name }}</div>
+                <div class="cell-sub">{{ app.student.roll_number }}</div>
+              </div>
+            </div>
+          </td>
+          <td style="font-size:12px;color:var(--text-500);">{{ app.applied_at|date:"M d, Y H:i" }}</td>
+          <td>
+            <span class="badge {% if app.payment_status == 'paid' %}badge-active{% elif app.payment_status == 'unpaid' %}badge-overdue{% else %}badge-pending{% endif %}">
+              {{ app.get_payment_status_display }}
+            </span>
+          </td>
+          <td style="font-weight:700;color:{% if app.payment_status == 'paid' %}var(--c-success){% else %}var(--text-500){% endif %};">
+            {% if app.fee_paid > 0 %}₹{{ app.fee_paid|floatformat:0 }}{% else %}—{% endif %}
+          </td>
+          <td style="font-size:12px;color:var(--text-500);">{{ app.upi_id|default:"—" }}</td>
+          <td style="font-family:monospace;font-size:11px;color:var(--c-primary);">{{ app.transaction_id|default:"—"|truncatechars:16 }}</td>
+          <td>
+            <span class="badge {% if app.status == 'approved' %}badge-active{% elif app.status == 'pending' %}badge-pending{% elif app.status == 'rejected' %}badge-overdue{% else %}badge-inactive{% endif %}">
+              ● {{ app.get_status_display }}
+            </span>
+          </td>
+          <td style="font-family:monospace;font-size:12px;color:var(--c-primary);">
+            {% if app.hall_ticket_no %}
+              <a href="{% url 'hall_ticket' app.pk %}" target="_blank" style="color:var(--c-primary);">{{ app.hall_ticket_no }}</a>
+            {% else %}—{% endif %}
+          </td>
+          <td>
+            <div class="row-actions">
+              {% if app.status == 'pending' %}
+              <a href="{% url 'application_approve' app.pk %}" class="btn btn-sm" style="background:rgba(34,197,94,0.15);color:var(--c-success);border:1px solid rgba(34,197,94,0.3);font-size:11px;padding:3px 10px;">✓ Approve</a>
+              <a href="{% url 'application_reject' app.pk %}" class="btn btn-sm" style="background:rgba(239,68,68,0.12);color:var(--c-danger);border:1px solid rgba(239,68,68,0.3);font-size:11px;padding:3px 10px;">✗ Reject</a>
+              {% elif app.status == 'approved' %}
+              <a href="{% url 'hall_ticket' app.pk %}" class="btn btn-sm btn-outline" target="_blank" style="font-size:11px;padding:3px 10px;">🎫 Hall Ticket</a>
+              {% else %}
+              <span style="font-size:12px;color:var(--text-500);">{{ app.get_status_display }}</span>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="9">
+          <div class="empty-state">
+            <h6>No applications yet</h6>
+            <p>Students can apply from the <a href="{% url 'exam_portal' %}">Exam Portal</a></p>
+          </div>
+        </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}Results — EduAdmin Pro{% endblock %}
+{% block page_title %}Results{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+<li class="breadcrumb-item active">Results</li>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h4>Academic Results</h4></div>
+  <div style="display:flex;gap:8px;">
+    <a href="{% url 'result_export' %}" class="btn btn-outline" title="Export CSV">⬇ Export CSV</a>
+    <a href="{% url 'result_export_pdf' %}" class="btn btn-primary">📄 Export PDF</a>
+    <a href="{% url 'result_add' %}" class="btn btn-primary">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Result
+    </a>
+  </div>
+</div>
+<div class="card">
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th>Student</th><th>Course</th><th>Semester</th><th>Marks</th><th>%</th><th>Grade</th><th style="text-align:right;">Actions</th></tr></thead>
+      <tbody>
+        {% for result in page_obj %}
+        <tr>
+          <td>
+            <div class="cell-user">
+              <div class="cell-avatar-placeholder">{{ result.student.full_name|first|upper }}</div>
+              <div><div class="cell-name">{{ result.student.full_name }}</div></div>
+            </div>
+          </td>
+          <td style="color:var(--text-500);font-size:12.5px;">{{ result.course.name }}</td>
+          <td style="color:var(--text-500);font-size:12.5px;">{{ result.semester }}</td>
+          <td>{{ result.marks_obtained }}<span style="color:var(--text-500);">/{{ result.total_marks }}</span></td>
+          <td>
+            <span class="badge {% if result.percentage >= 75 %}badge-active{% elif result.percentage >= 50 %}badge-pending{% else %}badge-overdue{% endif %}">{{ result.percentage }}%</span>
+          </td>
+          <td><span class="badge badge-primary">{{ result.grade }}</span></td>
+          <td><div class="row-actions">
+            <a href="{% url 'result_delete' result.pk %}" class="row-btn danger" data-confirm-href="{% url 'result_delete' result.pk %}" data-confirm-message="Delete this result record?"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6m5 0V4h4v2"/></svg></a>
+          </div></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7"><div class="empty-state"><h6>No results yet</h6><p><a href="{% url 'result_add' %}">Add the first result</a></p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if page_obj.has_other_pages %}
+  <div class="pagination-bar">
+    <span class="text-muted">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+    <div class="pg-btns">
+      {% if page_obj.has_previous %}<a class="pg-btn" href="?page={{ page_obj.previous_page_number }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></a>{% endif %}
+      {% for num in page_obj.paginator.page_range %}{% if page_obj.number == num %}<span class="pg-btn active">{{ num }}</span>{% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}<a class="pg-btn" href="?page={{ num }}">{{ num }}</a>{% endif %}{% endfor %}
+      {% if page_obj.has_next %}<a class="pg-btn" href="?page={{ page_obj.next_page_number }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>{% endif %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

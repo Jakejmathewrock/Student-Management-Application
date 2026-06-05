@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% block title %}Payment Dashboard{% endblock %}
+{% block page_title %}Payment Dashboard{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+<li class="breadcrumb-item active">Payments</li>
+{% endblock %}
+{% block content %}
+
+<!-- KPI Cards -->
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;">
+  <div class="kpi-card" style="--kpi-color:#3B82F6;--kpi-bg:rgba(59,130,246,0.12);">
+    <div class="kpi-value" style="font-size:26px;">₹{{ total_fees|floatformat:0 }}</div>
+    <div class="kpi-label">Total Fees</div><div class="kpi-sub">All semesters</div>
+  </div>
+  <div class="kpi-card" style="--kpi-color:#22C55E;--kpi-bg:rgba(34,197,94,0.12);">
+    <div class="kpi-value" style="font-size:26px;color:var(--c-success);">₹{{ total_paid|floatformat:0 }}</div>
+    <div class="kpi-label">Total Paid</div><div class="kpi-sub">{{ paid_count }} records cleared</div>
+  </div>
+  <div class="kpi-card" style="--kpi-color:#EF4444;--kpi-bg:rgba(239,68,68,0.12);">
+    <div class="kpi-value" style="font-size:26px;color:var(--c-danger);">₹{{ total_due|floatformat:0 }}</div>
+    <div class="kpi-label">Outstanding Due</div><div class="kpi-sub">{{ pending_count }} pending</div>
+  </div>
+  <div class="kpi-card" style="--kpi-color:#A78BFA;--kpi-bg:rgba(167,139,250,0.12);">
+    <div class="kpi-value" style="font-size:26px;">{{ transactions|length }}</div>
+    <div class="kpi-label">Transactions</div><div class="kpi-sub">Recent activity</div>
+  </div>
+</div>
+
+<!-- Fee Records -->
+<div class="card" style="margin-bottom:16px;">
+  <div class="card-header">
+    <span class="card-title">💳 My Fee Records</span>
+    <a href="{% url 'payment_history' %}" class="btn btn-sm btn-outline">View History →</a>
+  </div>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th>Tuition</th><th>Exam</th><th>Hostel</th><th>Paid</th><th>Due</th><th>Status</th><th>Due Date</th><th style="text-align:right;">Action</th></tr></thead>
+      <tbody>
+        {% for fee in fee_records %}
+        <tr>
+          <td>₹{{ fee.tuition_fee|floatformat:0 }}</td>
+          <td>₹{{ fee.exam_fee|floatformat:0 }}</td>
+          <td>₹{{ fee.hostel_fee|floatformat:0 }}</td>
+          <td style="color:var(--c-success);font-weight:700;">₹{{ fee.paid_amount|floatformat:0 }}</td>
+          <td style="font-weight:700;color:{% if fee.total_due > 0 %}var(--c-danger){% else %}var(--c-success){% endif %};">
+            ₹{{ fee.total_due|floatformat:0 }}
+          </td>
+          <td><span class="badge badge-{{ fee.status }}">● {{ fee.get_status_display }}</span></td>
+          <td style="font-size:12px;color:var(--text-500);">{{ fee.due_date|date:"M d, Y"|default:"—" }}</td>
+          <td>
+            <div class="row-actions">
+              {% if fee.total_due > 0 %}
+              <a href="{% url 'payment_initiate' fee.pk %}" class="btn btn-sm btn-primary" style="font-size:11.5px;padding:4px 12px;">💳 Pay Now</a>
+              {% else %}
+              <span class="badge badge-active">✓ Paid</span>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8"><div class="empty-state"><h6>No fee records</h6></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Recent Transactions -->
+<div class="card">
+  <div class="card-header"><span class="card-title">📋 Recent Transactions</span></div>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th>Receipt</th><th>Amount</th><th>Method</th><th>Ref</th><th>Date</th><th>Status</th><th>Receipt</th></tr></thead>
+      <tbody>
+        {% for txn in transactions %}
+        <tr>
+          <td style="font-family:monospace;font-size:12px;color:var(--c-primary);">{{ txn.receipt_number|default:"—" }}</td>
+          <td style="font-weight:700;color:var(--c-success);">₹{{ txn.amount|floatformat:0 }}</td>
+          <td><span class="badge badge-primary">{{ txn.get_method_display }}</span></td>
+          <td style="font-family:monospace;font-size:11.5px;color:var(--text-500);">{{ txn.transaction_ref|default:txn.razorpay_payment_id|default:"—"|truncatechars:18 }}</td>
+          <td style="font-size:12px;color:var(--text-500);">{{ txn.paid_at|date:"M d, Y H:i"|default:txn.created_at|date:"M d, Y" }}</td>
+          <td><span class="badge {% if txn.status == 'completed' %}badge-active{% elif txn.status == 'pending' %}badge-pending{% elif txn.status == 'failed' %}badge-overdue{% else %}badge-inactive{% endif %}">{{ txn.get_status_display }}</span></td>
+          <td>
+            {% if txn.status == 'completed' %}
+            <a href="{% url 'payment_receipt_pdf' txn.pk %}" class="btn btn-sm btn-outline" style="font-size:11px;">⬇ PDF</a>
+            {% else %}—{% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7" style="text-align:center;color:var(--text-500);padding:24px;">No transactions yet</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% block title %}Pay Fee — ₹{{ due|floatformat:0 }}{% endblock %}
+{% block page_title %}Pay Fee{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'payment_dashboard' %}">Payments</a></li>
+<li class="breadcrumb-item active">Pay Now</li>
+{% endblock %}
+{% block content %}
+<div style="max-width:900px;margin:0 auto;">
+
+  <!-- Fee Summary Banner -->
+  <div style="background:linear-gradient(135deg,#1E3A8A,#2563EB);border-radius:var(--radius-lg);padding:22px 28px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;">
+    <div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.7);margin-bottom:4px;">Paying for</div>
+      <div style="font-size:18px;font-weight:800;color:#fff;">{{ fee.student.full_name }}</div>
+      <div style="font-size:12.5px;color:rgba(255,255,255,0.7);">{{ fee.student.roll_number }} · {{ fee.student.department }}</div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:13px;color:rgba(255,255,255,0.7);">Amount Due</div>
+      <div style="font-size:36px;font-weight:900;color:#fff;">₹{{ due|floatformat:0 }}</div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+
+    <!-- ── UPI / QR Code Payment ── -->
+    <div class="card">
+      <div class="card-header" style="background:rgba(34,197,94,0.05);border-bottom-color:rgba(34,197,94,0.2);">
+        <span class="card-title" style="color:var(--c-success);">📱 Pay via UPI / QR Code</span>
+        <span class="badge badge-active">Instant</span>
+      </div>
+      <div class="card-body" style="text-align:center;">
+        <!-- QR Code -->
+        <div style="background:#fff;padding:16px;border-radius:12px;display:inline-block;margin-bottom:16px;box-shadow:0 4px 20px rgba(0,0,0,0.15);">
+          <img src="data:image/png;base64,{{ qr_b64 }}" alt="UPI QR Code" style="width:200px;height:200px;"/>
+        </div>
+        <div style="font-size:13px;color:var(--text-500);margin-bottom:6px;">Scan with any UPI app</div>
+        <div style="font-size:16px;font-weight:700;color:var(--c-primary);margin-bottom:4px;">{{ upi_id }}</div>
+        <div style="font-size:12.5px;color:var(--text-500);margin-bottom:16px;">{{ upi_name }}</div>
+        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:20px;">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/UPI-Logo-vector.svg/200px-UPI-Logo-vector.svg.png" style="height:28px;object-fit:contain;" alt="UPI"/>
+        </div>
+
+        <!-- Manual confirmation form -->
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;text-align:left;">
+          <div style="font-size:12.5px;font-weight:600;color:var(--text-700);margin-bottom:10px;">After paying, enter the transaction reference:</div>
+          <form method="POST" action="{% url 'payment_upi_confirm' fee.pk %}">
+            {% csrf_token %}
+            <div style="margin-bottom:10px;">
+              <label style="font-size:12px;font-weight:600;color:var(--text-500);display:block;margin-bottom:5px;">Your UPI ID</label>
+              <input type="text" name="upi_id" placeholder="yourname@upi" style="width:100%;padding:8px 11px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-900);font-size:13px;outline:none;"/>
+            </div>
+            <div style="margin-bottom:12px;">
+              <label style="font-size:12px;font-weight:600;color:var(--text-500);display:block;margin-bottom:5px;">UPI Transaction Reference *</label>
+              <input type="text" name="upi_ref" placeholder="e.g. 123456789012 or TXN..." required style="width:100%;padding:8px 11px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-900);font-size:13px;outline:none;"/>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;font-weight:700;">✓ Confirm UPI Payment</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Razorpay Card Payment ── -->
+    <div class="card">
+      <div class="card-header" style="background:rgba(59,130,246,0.05);border-bottom-color:rgba(59,130,246,0.2);">
+        <span class="card-title">💳 Pay via Razorpay</span>
+        <span class="badge badge-primary">Card / Netbanking</span>
+      </div>
+      <div class="card-body" style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px;">
+        <div style="font-size:48px;">💳</div>
+        <div style="font-size:13.5px;color:var(--text-500);line-height:1.6;">
+          Pay securely using Credit Card, Debit Card, Net Banking, Wallet, or UPI through Razorpay.
+        </div>
+
+        {% if rz_order %}
+        <div style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:8px;padding:12px;width:100%;font-size:12.5px;">
+          <div style="color:var(--text-500);margin-bottom:4px;">Order ID</div>
+          <div style="font-family:monospace;color:var(--c-primary);">{{ rz_order.id }}</div>
+          <div style="color:var(--text-500);margin-top:6px;">Amount: <strong style="color:var(--c-success);">₹{{ due|floatformat:0 }}</strong></div>
+        </div>
+
+        <button id="rzpBtn" class="btn btn-primary" style="width:100%;justify-content:center;padding:12px;font-size:14px;font-weight:700;">
+          🔒 Pay ₹{{ due|floatformat:0 }} Securely
+        </button>
+
+        <form id="rzpForm" method="POST" action="{% url 'payment_razorpay_callback' %}">
+          {% csrf_token %}
+          <input type="hidden" name="razorpay_order_id" id="rzp_order_id"/>
+          <input type="hidden" name="razorpay_payment_id" id="rzp_payment_id"/>
+          <input type="hidden" name="razorpay_signature" id="rzp_signature"/>
+          <input type="hidden" name="fee_pk" value="{{ fee.pk }}"/>
+        </form>
+        {% else %}
+        <div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);border-radius:8px;padding:14px;font-size:13px;color:var(--c-warning);">
+          ⚠️ Razorpay is not configured for this instance. Please use UPI payment.
+        </div>
+        {% endif %}
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;opacity:0.6;">
+          <span style="font-size:11px;color:var(--text-500);">🔒 256-bit SSL Encrypted</span>
+          <span style="font-size:11px;color:var(--text-500);">·</span>
+          <span style="font-size:11px;color:var(--text-500);">✓ PCI DSS Compliant</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:14px;text-align:center;">
+    <a href="{% url 'payment_dashboard' %}" class="btn btn-secondary">← Cancel &amp; Go Back</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if rz_order %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+document.getElementById('rzpBtn').addEventListener('click', function() {
+  var options = {
+    key: '{{ rz_key }}',
+    amount: {{ due|floatformat:0 }}00,
+    currency: 'INR',
+    name: 'EduAdmin College',
+    description: 'Fee Payment — {{ fee.student.full_name }}',
+    order_id: '{{ rz_order.id }}',
+    prefill: { name: '{{ fee.student.full_name }}', email: '{{ fee.student.email }}' },
+    theme: { color: '#2563EB' },
+    handler: function(response) {
+      document.getElementById('rzp_order_id').value   = response.razorpay_order_id;
+      document.getElementById('rzp_payment_id').value = response.razorpay_payment_id;
+      document.getElementById('rzp_signature').value  = response.razorpay_signature;
+      document.getElementById('rzpForm').submit();
+    },
+    modal: { ondismiss: function(){ alert('Payment cancelled.'); } }
+  };
+  new Razorpay(options).open();
+});
+</script>
+{% endif %}
+{% endblock %}

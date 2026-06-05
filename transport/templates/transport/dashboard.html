@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% block title %}Transport Management — EduAdmin Pro{% endblock %}
+{% block page_title %}Transport Management{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+<li class="breadcrumb-item active">Transport</li>
+{% endblock %}
+
+{% block content %}
+<!-- KPI Row -->
+<div class="kpi-grid" style="margin-bottom:20px;">
+  <a href="{% url 'route_list' %}" class="kpi-card" style="--kpi-color:#3B82F6;--kpi-bg:rgba(59,130,246,0.12);">
+    <div class="kpi-header">
+      <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg></div>
+      <span class="kpi-trend up">{{ active_routes }} active</span>
+    </div>
+    <div class="kpi-value" data-count="{{ total_routes }}">{{ total_routes }}</div>
+    <div class="kpi-label">Bus Routes</div>
+    <div class="kpi-sub">View all routes →</div>
+  </a>
+
+  <a href="{% url 'vehicle_list' %}" class="kpi-card" style="--kpi-color:#22C55E;--kpi-bg:rgba(34,197,94,0.12);">
+    <div class="kpi-header">
+      <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8zM1 16h20M5.5 21a1.5 1.5 0 100-3 1.5 1.5 0 000 3zM18.5 21a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/></svg></div>
+      <span class="kpi-trend up">{{ active_vehicles }} running</span>
+    </div>
+    <div class="kpi-value" data-count="{{ total_vehicles }}">{{ total_vehicles }}</div>
+    <div class="kpi-label">Vehicles</div>
+    <div class="kpi-sub">Fleet management →</div>
+  </a>
+
+  <a href="{% url 'driver_list' %}" class="kpi-card" style="--kpi-color:#A78BFA;--kpi-bg:rgba(167,139,250,0.12);">
+    <div class="kpi-header">
+      <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#A78BFA" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 10-16 0"/></svg></div>
+      <span class="kpi-trend up">{{ active_drivers }} active</span>
+    </div>
+    <div class="kpi-value" data-count="{{ total_drivers }}">{{ total_drivers }}</div>
+    <div class="kpi-label">Drivers</div>
+    <div class="kpi-sub">Driver details →</div>
+  </a>
+
+  <a href="{% url 'transport_fee_list' %}" class="kpi-card" style="--kpi-color:#F59E0B;--kpi-bg:rgba(245,158,11,0.12);">
+    <div class="kpi-header">
+      <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg></div>
+      <span class="kpi-trend down">{{ overdue_fees }} overdue</span>
+    </div>
+    <div class="kpi-value" data-count="{{ pending_fees }}">{{ pending_fees }}</div>
+    <div class="kpi-label">Pending Fees</div>
+    <div class="kpi-sub">Collect payments →</div>
+  </a>
+
+  <div class="kpi-card" style="--kpi-color:#EF4444;--kpi-bg:rgba(239,68,68,0.12);">
+    <div class="kpi-header">
+      <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg></div>
+      <span class="kpi-trend up">scheduled</span>
+    </div>
+    <div class="kpi-value" data-count="{{ upcoming_maintenance }}">{{ upcoming_maintenance }}</div>
+    <div class="kpi-label">Maintenance Due</div>
+    <div class="kpi-sub">Service alerts</div>
+  </div>
+
+  <div class="kpi-card" style="--kpi-color:#06B6D4;--kpi-bg:rgba(6,182,212,0.12);">
+    <div class="kpi-header">
+      <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#06B6D4" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></div>
+      <span class="kpi-trend up">using bus</span>
+    </div>
+    <div class="kpi-value" data-count="{{ total_students_using_transport }}">{{ total_students_using_transport }}</div>
+    <div class="kpi-label">Students</div>
+    <div class="kpi-sub">Enrolled in transport</div>
+  </div>
+</div>
+
+<!-- Quick Actions + Recent Trips -->
+<div style="display:grid;grid-template-columns:1fr 340px;gap:16px;margin-bottom:16px;">
+
+  <!-- Recent Trips -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">🚌 Recent Trips</span>
+      <a href="{% url 'trip_log_list' %}" class="btn btn-sm btn-outline">View All →</a>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Route</th><th>Vehicle</th><th>Driver</th><th>Date</th><th>Status</th></tr></thead>
+        <tbody>
+          {% for trip in recent_trips %}
+          <tr>
+            <td><span class="badge badge-primary">{{ trip.route.route_number }}</span></td>
+            <td style="font-size:12.5px;color:var(--text-500);">{{ trip.vehicle.vehicle_number }}</td>
+            <td style="font-size:12.5px;color:var(--text-500);">{{ trip.driver.full_name|truncatechars:16 }}</td>
+            <td style="font-size:12px;color:var(--text-500);">{{ trip.trip_date|date:"M d" }}</td>
+            <td>
+              <span class="badge {% if trip.status == 'completed' %}badge-active{% elif trip.status == 'in_transit' %}badge-pending{% elif trip.status == 'scheduled' %}badge-primary{% else %}badge-overdue{% endif %}">
+                {{ trip.get_status_display }}
+              </span>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5" style="text-align:center;color:var(--text-500);padding:24px;font-size:13px;">No trips logged yet. <a href="{% url 'trip_log_add' %}">Add one</a></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="card">
+    <div class="card-header"><span class="card-title">⚡ Quick Actions</span></div>
+    <div class="card-body" style="padding:12px 16px;display:flex;flex-direction:column;gap:8px;">
+      <a href="{% url 'route_add' %}"         class="btn btn-outline" style="justify-content:flex-start;font-size:13px;">🗺 Add Bus Route</a>
+      <a href="{% url 'driver_add' %}"         class="btn btn-outline" style="justify-content:flex-start;font-size:13px;">👤 Add Driver</a>
+      <a href="{% url 'vehicle_add' %}"        class="btn btn-outline" style="justify-content:flex-start;font-size:13px;">🚌 Add Vehicle</a>
+      <a href="{% url 'transport_fee_add' %}"  class="btn btn-outline" style="justify-content:flex-start;font-size:13px;">💳 Add Transport Fee</a>
+      <a href="{% url 'maintenance_add' %}"    class="btn btn-outline" style="justify-content:flex-start;font-size:13px;">🔧 Schedule Maintenance</a>
+      <a href="{% url 'trip_log_add' %}"       class="btn btn-outline" style="justify-content:flex-start;font-size:13px;">📋 Log a Trip</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

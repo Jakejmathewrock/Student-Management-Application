@@ -1,0 +1,365 @@
+{% extends 'base_portal.html' %}
+{% block title %}Student Dashboard — EduAdmin Pro{% endblock %}
+{% block page_title %}My Dashboard{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item active">My Dashboard</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── Laundry Card Grid ── */
+.laundry-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 10px;
+}
+.laundry-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 12px;
+  text-align: center;
+  transition: var(--transition);
+  cursor: pointer;
+  position: relative;
+}
+.laundry-item:hover {
+  border-color: var(--c-primary);
+  box-shadow: 0 4px 20px rgba(59,130,246,0.15);
+  transform: translateY(-2px);
+}
+.laundry-emoji  { font-size: 30px; margin-bottom: 8px; display: block; }
+.laundry-name   { font-size: 12.5px; font-weight: 700; color: var(--text-900); margin-bottom: 4px; line-height: 1.3; }
+.laundry-desc   { font-size: 11px; color: var(--text-500); margin-bottom: 8px; line-height: 1.4; }
+.laundry-price  { font-size: 18px; font-weight: 900; color: var(--c-success); }
+.laundry-unit   { font-size: 10.5px; color: var(--text-500); }
+.laundry-time   { position: absolute; top: 8px; right: 8px; font-size: 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 50px; padding: 2px 7px; color: var(--text-500); }
+.cat-section    { margin-bottom: 22px; }
+.cat-title      { font-size: 13px; font-weight: 700; color: var(--c-primary); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; padding-bottom: 8px; border-bottom: 2px solid rgba(59,130,246,0.2); }
+</style>
+{% endblock %}
+
+{% block content %}
+{% if error %}
+<div class="card" style="padding:40px;text-align:center;">
+  <div style="font-size:48px;margin-bottom:12px;">⚠️</div>
+  <h5 style="font-weight:700;color:var(--text-900);margin-bottom:8px;">Profile Not Linked</h5>
+  <p style="color:var(--text-500);font-size:13.5px;">{{ error }}</p>
+</div>
+{% else %}
+
+<!-- Quick Service Banners -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+  <a href="{% url 'food_court' %}" class="card" style="display:flex;align-items:center;gap:14px;padding:16px 20px;text-decoration:none;border-color:rgba(245,158,11,0.3);background:rgba(245,158,11,0.05);">
+    <span style="font-size:32px;">🍽️</span>
+    <div><div style="font-size:14px;font-weight:700;color:var(--text-900);">Campus Food Court</div><div style="font-size:12px;color:var(--text-500);">Order food online — pay via UPI</div></div>
+    <span class="btn btn-primary btn-sm" style="margin-left:auto;white-space:nowrap;">Order →</span>
+  </a>
+  <a href="{% url 'laundry_place_order' %}" class="card" style="display:flex;align-items:center;gap:14px;padding:16px 20px;text-decoration:none;border-color:rgba(59,130,246,0.3);background:rgba(59,130,246,0.05);">
+    <span style="font-size:32px;">🧺</span>
+    <div><div style="font-size:14px;font-weight:700;color:var(--text-900);">Laundry Services</div><div style="font-size:12px;color:var(--text-500);">Book washing, ironing, folding &amp; more</div></div>
+    <span class="btn btn-primary btn-sm" style="margin-left:auto;white-space:nowrap;">Book →</span>
+  </a>
+</div>
+
+<!-- KPI Cards -->
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;">
+  <div class="kpi-card" style="--kpi-color:#3B82F6;--kpi-bg:rgba(59,130,246,0.12);">
+    <div class="kpi-value" style="font-size:28px;">{{ student.gpa }}</div>
+    <div class="kpi-label">My GPA</div>
+    <div class="kpi-sub">Out of 4.0</div>
+  </div>
+  <div class="kpi-card" style="--kpi-color:#22C55E;--kpi-bg:rgba(34,197,94,0.12);">
+    <div class="kpi-value" style="font-size:28px;color:{% if student.attendance_percentage >= 75 %}var(--c-success){% else %}var(--c-danger){% endif %};">{{ student.attendance_percentage }}%</div>
+    <div class="kpi-label">Attendance</div>
+    <div class="kpi-sub">{% if student.attendance_percentage >= 75 %}Good standing{% else %}⚠ Below 75%{% endif %}</div>
+  </div>
+  <div class="kpi-card" style="--kpi-color:#A78BFA;--kpi-bg:rgba(167,139,250,0.12);">
+    <div class="kpi-value" style="font-size:28px;">{{ results|length }}</div>
+    <div class="kpi-label">Results</div>
+    <div class="kpi-sub">Exam records</div>
+  </div>
+  <div class="kpi-card" style="--kpi-color:#22C55E;--kpi-bg:rgba(34,197,94,0.12);">
+    <div class="kpi-value" style="font-size:28px;">{{ laundry_orders|length }}</div>
+    <div class="kpi-label">Laundry Orders</div>
+    <div class="kpi-sub">This semester</div>
+  </div>
+</div>
+
+<!-- Student Info + Results Chart -->
+<div style="display:grid;grid-template-columns:260px 1fr;gap:16px;margin-bottom:20px;">
+  <div class="card" style="text-align:center;padding:24px 16px;">
+    <div style="display:flex;justify-content:center;margin-bottom:12px;">
+      {% if student.photo %}
+        <img src="{{ student.photo.url }}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid var(--c-primary);"/>
+      {% else %}
+        <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#1E3A8A,#2563EB);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#fff;">{{ student.full_name|first|upper }}</div>
+      {% endif %}
+    </div>
+    <div style="font-size:15px;font-weight:700;color:var(--text-900);">{{ student.full_name }}</div>
+    <div style="font-size:11.5px;color:var(--text-500);font-family:monospace;margin:4px 0 8px;">{{ student.student_id }}</div>
+    <span class="badge badge-{{ student.status }}">● {{ student.status|title }}</span>
+    <div style="margin-top:14px;font-size:12.5px;color:var(--text-500);text-align:left;display:flex;flex-direction:column;gap:5px;">
+      <div>🏛 {{ student.department|default:"—" }}</div>
+      <div>📚 {{ student.course|default:"—" }}</div>
+      <div>📅 Year {{ student.year_of_admission }}</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><span class="card-title">📊 My Marks by Course</span></div>
+    <div class="card-body"><div id="myResultsChart" style="height:220px;"></div></div>
+  </div>
+</div>
+
+<!-- Attendance + Results -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px;">
+  <div class="card">
+    <div class="card-header"><span class="card-title">✅ Recent Attendance</span></div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Date</th><th>Status</th></tr></thead>
+        <tbody>
+          {% for rec in attendance_records %}
+          <tr>
+            <td style="font-size:12.5px;">{{ rec.date|date:"D, M d Y" }}</td>
+            <td><span class="badge badge-{{ rec.status }}">● {{ rec.status|title }}</span></td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="2" style="text-align:center;color:var(--text-500);padding:20px;font-size:12.5px;">No records yet</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><span class="card-title">📋 Exam Results</span></div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Course</th><th>Marks</th><th>Grade</th></tr></thead>
+        <tbody>
+          {% for result in results %}
+          <tr>
+            <td style="font-size:12px;font-weight:500;">{{ result.course.code }}</td>
+            <td style="font-size:12.5px;">{{ result.marks_obtained }}/{{ result.total_marks }}</td>
+            <td><span class="badge badge-primary">{{ result.grade }}</span></td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="3" style="text-align:center;color:var(--text-500);padding:20px;font-size:12.5px;">No results yet</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     🧺  LAUNDRY SERVICES SECTION
+     ══════════════════════════════════════════════════════════════ -->
+<div class="card" style="margin-bottom:24px;overflow:hidden;">
+
+  <!-- Header Banner -->
+  <div style="background:linear-gradient(135deg,#1E3A8A 0%,#2563EB 60%,#3B82F6 100%);padding:22px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;">
+    <div>
+      <div style="font-size:20px;font-weight:800;color:#fff;margin-bottom:4px;">🧺 Campus Laundry Services</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.75);">Select any service, add quantity, pay via UPI — delivered to your room.</div>
+      <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;">
+        <span style="background:rgba(255,255,255,0.15);color:#fff;padding:4px 12px;border-radius:50px;font-size:11.5px;">⚡ 24hr delivery</span>
+        <span style="background:rgba(255,255,255,0.15);color:#fff;padding:4px 12px;border-radius:50px;font-size:11.5px;">💳 UPI payment</span>
+        <span style="background:rgba(255,255,255,0.15);color:#fff;padding:4px 12px;border-radius:50px;font-size:11.5px;">🚪 Room pickup</span>
+        <span style="background:rgba(255,255,255,0.15);color:#fff;padding:4px 12px;border-radius:50px;font-size:11.5px;">31 services available</span>
+      </div>
+    </div>
+    <a href="{% url 'laundry_place_order' %}" style="background:#fff;color:#2563EB;border:none;font-weight:700;font-size:14px;padding:11px 22px;border-radius:8px;text-decoration:none;white-space:nowrap;">+ Place Order →</a>
+  </div>
+
+  <div style="padding:24px 28px;">
+
+    <!-- ── Category: Washing ── -->
+    <div class="cat-section">
+      <div class="cat-title">👕 Washing Clothes</div>
+      <div class="laundry-grid">
+        {% for svc in laundry_services %}{% if svc.category == 'washing' %}
+        <div class="laundry-item">
+          <span class="laundry-time">⏱ {{ svc.turnaround_hrs }}h</span>
+          <span class="laundry-emoji">{{ svc.emoji }}</span>
+          <div class="laundry-name">{{ svc.name }}</div>
+          {% if svc.description %}<div class="laundry-desc">{{ svc.description }}</div>{% endif %}
+          <div class="laundry-price">₹{{ svc.price_per_item }}</div>
+          <div class="laundry-unit">{{ svc.unit }}</div>
+        </div>
+        {% endif %}{% endfor %}
+      </div>
+    </div>
+
+    <!-- ── Category: Drying ── -->
+    <div class="cat-section">
+      <div class="cat-title">☀️ Drying Clothes</div>
+      <div class="laundry-grid">
+        {% for svc in laundry_services %}{% if svc.category == 'drying' %}
+        <div class="laundry-item">
+          <span class="laundry-time">⏱ {{ svc.turnaround_hrs }}h</span>
+          <span class="laundry-emoji">{{ svc.emoji }}</span>
+          <div class="laundry-name">{{ svc.name }}</div>
+          {% if svc.description %}<div class="laundry-desc">{{ svc.description }}</div>{% endif %}
+          <div class="laundry-price">₹{{ svc.price_per_item }}</div>
+          <div class="laundry-unit">{{ svc.unit }}</div>
+        </div>
+        {% endif %}{% endfor %}
+      </div>
+    </div>
+
+    <!-- ── Category: Ironing ── -->
+    <div class="cat-section">
+      <div class="cat-title">🔥 Ironing Clothes</div>
+      <div class="laundry-grid">
+        {% for svc in laundry_services %}{% if svc.category == 'ironing' %}
+        <div class="laundry-item">
+          <span class="laundry-time">⏱ {{ svc.turnaround_hrs }}h</span>
+          <span class="laundry-emoji">{{ svc.emoji }}</span>
+          <div class="laundry-name">{{ svc.name }}</div>
+          {% if svc.description %}<div class="laundry-desc">{{ svc.description }}</div>{% endif %}
+          <div class="laundry-price">₹{{ svc.price_per_item }}</div>
+          <div class="laundry-unit">{{ svc.unit }}</div>
+        </div>
+        {% endif %}{% endfor %}
+      </div>
+    </div>
+
+    <!-- ── Category: Folding ── -->
+    <div class="cat-section">
+      <div class="cat-title">📦 Folding Clothes</div>
+      <div class="laundry-grid">
+        {% for svc in laundry_services %}{% if svc.category == 'folding' %}
+        <div class="laundry-item">
+          <span class="laundry-time">⏱ {{ svc.turnaround_hrs }}h</span>
+          <span class="laundry-emoji">{{ svc.emoji }}</span>
+          <div class="laundry-name">{{ svc.name }}</div>
+          {% if svc.description %}<div class="laundry-desc">{{ svc.description }}</div>{% endif %}
+          <div class="laundry-price">₹{{ svc.price_per_item }}</div>
+          <div class="laundry-unit">{{ svc.unit }}</div>
+        </div>
+        {% endif %}{% endfor %}
+      </div>
+    </div>
+
+    <!-- ── Category: Bed Sheets & Pillow Covers ── -->
+    <div class="cat-section">
+      <div class="cat-title">🛏️ Bed Sheets &amp; Pillow Covers Cleaning</div>
+      <div class="laundry-grid">
+        {% for svc in laundry_services %}{% if svc.category == 'bedding' %}
+        <div class="laundry-item" style="border-color:rgba(139,92,246,0.3);">
+          <span class="laundry-time">⏱ {{ svc.turnaround_hrs }}h</span>
+          <span class="laundry-emoji">{{ svc.emoji }}</span>
+          <div class="laundry-name">{{ svc.name }}</div>
+          {% if svc.description %}<div class="laundry-desc">{{ svc.description }}</div>{% endif %}
+          <div class="laundry-price" style="color:var(--c-purple);">₹{{ svc.price_per_item }}</div>
+          <div class="laundry-unit">{{ svc.unit }}</div>
+        </div>
+        {% endif %}{% endfor %}
+      </div>
+    </div>
+
+    <!-- ── Category: Towels & Cleaning ── -->
+    <div class="cat-section">
+      <div class="cat-title">🪣 Towels &amp; Cleaning</div>
+      <div class="laundry-grid">
+        {% for svc in laundry_services %}{% if svc.category == 'towels' %}
+        <div class="laundry-item" style="border-color:rgba(6,182,212,0.3);">
+          <span class="laundry-time">⏱ {{ svc.turnaround_hrs }}h</span>
+          <span class="laundry-emoji">{{ svc.emoji }}</span>
+          <div class="laundry-name">{{ svc.name }}</div>
+          {% if svc.description %}<div class="laundry-desc">{{ svc.description }}</div>{% endif %}
+          <div class="laundry-price" style="color:var(--c-cyan);">₹{{ svc.price_per_item }}</div>
+          <div class="laundry-unit">{{ svc.unit }}</div>
+        </div>
+        {% endif %}{% endfor %}
+      </div>
+    </div>
+
+    <!-- ── Category: Special Care ── -->
+    <div class="cat-section">
+      <div class="cat-title">✨ Special Care</div>
+      <div class="laundry-grid">
+        {% for svc in laundry_services %}{% if svc.category == 'special' %}
+        <div class="laundry-item" style="border-color:rgba(245,158,11,0.3);">
+          <span class="laundry-time">⏱ {{ svc.turnaround_hrs }}h</span>
+          <span class="laundry-emoji">{{ svc.emoji }}</span>
+          <div class="laundry-name">{{ svc.name }}</div>
+          {% if svc.description %}<div class="laundry-desc">{{ svc.description }}</div>{% endif %}
+          <div class="laundry-price" style="color:var(--c-warning);">₹{{ svc.price_per_item }}</div>
+          <div class="laundry-unit">{{ svc.unit }}</div>
+        </div>
+        {% endif %}{% endfor %}
+      </div>
+    </div>
+
+    <!-- Place Order CTA -->
+    <div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:var(--radius);padding:18px 22px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:8px;">
+      <div>
+        <div style="font-size:14px;font-weight:700;color:var(--text-900);">Ready to place your laundry order?</div>
+        <div style="font-size:12.5px;color:var(--text-500);margin-top:3px;">Select items, pay via UPI — we collect from your room and deliver clean!</div>
+      </div>
+      <a href="{% url 'laundry_place_order' %}" class="btn btn-primary" style="padding:10px 22px;font-weight:700;">🧺 Place Order Now</a>
+    </div>
+  </div>
+</div>
+
+<!-- My Recent Laundry Orders -->
+{% if laundry_orders %}
+<div class="card" style="margin-bottom:20px;">
+  <div class="card-header">
+    <span class="card-title">🧺 My Recent Laundry Orders</span>
+    <a href="{% url 'laundry_my_orders' %}" class="btn btn-sm btn-outline">View All →</a>
+  </div>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th>Order #</th><th>Items</th><th>Amount</th><th>Status</th><th>Date</th><th></th></tr></thead>
+      <tbody>
+        {% for order in laundry_orders %}
+        <tr>
+          <td style="font-family:monospace;font-weight:700;color:var(--c-primary);">{{ order.order_number }}</td>
+          <td style="font-size:12.5px;">{{ order.items.count }} item{{ order.items.count|pluralize }}</td>
+          <td style="font-weight:700;color:var(--c-success);">₹{{ order.total_amount|floatformat:0 }}</td>
+          <td>
+            <span class="badge {% if order.status == 'delivered' %}badge-active{% elif order.status == 'ready' %}badge-primary{% elif order.status == 'processing' or order.status == 'collected' %}badge-pending{% elif order.status == 'cancelled' %}badge-overdue{% else %}badge-inactive{% endif %}">
+              ● {{ order.get_status_display }}
+            </span>
+          </td>
+          <td style="font-size:12px;color:var(--text-500);">{{ order.ordered_at|date:"M d, Y" }}</td>
+          <td><a href="{% url 'laundry_order_detail' order.pk %}" class="btn btn-sm btn-outline" style="font-size:11px;">View</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{% if not error %}
+<script>
+const isDark = () => document.documentElement.getAttribute('data-theme') !== 'light';
+const tc = () => isDark() ? '#475569' : '#64748B';
+const rl = [{% for r in results %}"{{ r.course.code }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+const rm = [{% for r in results %}{{ r.marks_obtained }}{% if not forloop.last %},{% endif %}{% endfor %}];
+if (rl.length) {
+  new ApexCharts(document.getElementById('myResultsChart'), {
+    chart:{type:'bar',height:220,toolbar:{show:false},background:'transparent',fontFamily:'Inter,sans-serif'},
+    series:[{name:'Marks',data:rm}],
+    xaxis:{categories:rl,labels:{style:{colors:tc(),fontSize:'11px'}}},
+    yaxis:{max:100,labels:{style:{colors:tc(),fontSize:'11px'}}},
+    colors:['#3B82F6'],
+    plotOptions:{bar:{borderRadius:5,columnWidth:'50%'}},
+    dataLabels:{enabled:true,style:{fontSize:'11px'}},
+    grid:{borderColor:isDark()?'rgba(59,130,246,0.08)':'#F1F5F9',strokeDashArray:4},
+    tooltip:{theme:isDark()?'dark':'light'},
+  }).render();
+} else {
+  document.getElementById('myResultsChart').innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:220px;color:var(--text-500);font-size:13px;">No results yet</div>';
+}
+</script>
+{% endif %}
+{% endblock %}

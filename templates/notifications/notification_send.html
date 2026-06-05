@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% block title %}Send Notification{% endblock %}
+{% block page_title %}Send Notification{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'notification_list' %}">Notifications</a></li>
+<li class="breadcrumb-item active">Send</li>
+{% endblock %}
+{% block extra_css %}
+<style>
+.send-grid{display:grid;grid-template-columns:1fr 360px;gap:18px;}
+.preview-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;position:sticky;top:16px;}
+.preview-notif{border-left:4px solid var(--c-primary);background:rgba(99,102,241,0.05);border-radius:0 var(--radius-sm) var(--radius-sm) 0;padding:12px 14px;}
+.preview-icon{font-size:20px;margin-bottom:6px;}
+.preview-title{font-size:13px;font-weight:700;color:var(--text-900);}
+.preview-message{font-size:12.5px;color:var(--text-500);margin-top:4px;line-height:1.5;}
+.input-std{width:100%;padding:8px 11px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-900);font-size:13px;font-family:inherit;outline:none;transition:border-color .15s;}
+.input-std:focus{border-color:var(--c-primary);}
+@media(max-width:900px){.send-grid{grid-template-columns:1fr;}}
+</style>
+{% endblock %}
+{% block content %}
+<div class="send-grid">
+  <!-- Form -->
+  <div class="form-card">
+    <div class="card-header">
+      <span class="card-title">📤 Send Notification</span>
+    </div>
+    <form method="POST" style="padding:20px;" id="sendForm">
+      {% csrf_token %}
+      {% if messages %}
+      {% for msg in messages %}
+      <div style="background:rgba({% if msg.tags == 'error' %}239,68,68{% else %}16,185,129{% endif %},0.1);border:1px solid {% if msg.tags == 'error' %}var(--c-danger){% else %}var(--c-success){% endif %};border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:16px;font-size:13px;color:{% if msg.tags == 'error' %}var(--c-danger){% else %}var(--c-success){% endif %};">{{ msg }}</div>
+      {% endfor %}
+      {% endif %}
+      <div class="form-section">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-500);margin-bottom:12px;">Recipient</div>
+        <div>
+          <label class="field-label">Target User *</label>
+          <select name="target" class="input-std" required id="targetSelect">
+            <option value="all">📢 All Users ({{ users|length }} users)</option>
+            {% for u in users %}
+            <option value="{{ u.pk }}">{{ u.username }}{% if u.get_full_name %} — {{ u.get_full_name }}{% endif %}{% if u.is_staff %} [staff]{% endif %}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="form-section" style="margin-top:14px;">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-500);margin-bottom:12px;">Notification Details</div>
+        <div class="form-grid">
+          <div>
+            <label class="field-label">Notification Type *</label>
+            <select name="notif_type" class="input-std" required id="ntypeSelect">
+              {% for val, label in type_choices %}
+              <option value="{{ val }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label class="field-label">Priority</label>
+            <select name="priority" class="input-std" id="prioritySelect">
+              <option value="low">Low</option>
+              <option value="medium" selected>Medium</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-top:12px;">
+          <label class="field-label">Title</label>
+          <input type="text" name="title" class="input-std" placeholder="Optional — short subject line" id="titleInput" maxlength="120"/>
+        </div>
+        <div style="margin-top:12px;">
+          <label class="field-label">Message *</label>
+          <textarea name="message" class="input-std" rows="4" required placeholder="Notification message content…" id="msgInput" maxlength="500" style="resize:vertical;"></textarea>
+          <div style="font-size:11px;color:var(--text-500);margin-top:3px;" id="charCount">0 / 500 characters</div>
+        </div>
+        <div style="margin-top:12px;">
+          <label class="field-label">Link <span style="color:var(--text-500);font-weight:400;">(optional)</span></label>
+          <input type="text" name="link" class="input-std" placeholder="/students/123/ or https://…" maxlength="255"/>
+        </div>
+      </div>
+      <div class="form-footer">
+        <a href="{% url 'notification_list' %}" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary">Send Notification</button>
+      </div>
+    </form>
+  </div>
+  <!-- Preview -->
+  <div>
+    <div class="preview-card">
+      <div style="font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-500);margin-bottom:14px;">Preview</div>
+      <div class="preview-notif" id="previewBlock">
+        <div class="preview-icon" id="previewIcon">📢</div>
+        <div class="preview-title" id="previewTitle">Notification Title</div>
+        <div class="preview-message" id="previewMsg">Your notification message will appear here…</div>
+      </div>
+      <div style="margin-top:12px;font-size:12px;color:var(--text-500);">
+        <div id="previewTarget">→ All Users</div>
+        <div id="previewPriority">Priority: Medium</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+const icons = {
+  fee_due:'💳', fee_paid:'✅', assignment:'📝', attendance:'⚠️',
+  result:'📊', exam:'📋', transport:'🚌', announcement:'📢', system:'⚙️'
+};
+const colors = {
+  fee_due:'var(--c-warning)', fee_paid:'var(--c-success)', assignment:'var(--c-primary)',
+  attendance:'var(--c-danger)', result:'var(--c-success)', exam:'var(--c-purple)',
+  transport:'#06b6d4', announcement:'var(--c-primary)', system:'var(--text-500)'
+};
+
+function updatePreview(){
+  const ntype = document.getElementById('ntypeSelect').value;
+  const title = document.getElementById('titleInput').value;
+  const msg   = document.getElementById('msgInput').value;
+  const target = document.getElementById('targetSelect');
+  const priority = document.getElementById('prioritySelect').value;
+  document.getElementById('previewIcon').textContent = icons[ntype] || '🔔';
+  document.getElementById('previewTitle').textContent = title || 'Notification Title';
+  document.getElementById('previewMsg').textContent = msg || 'Your notification message will appear here…';
+  document.getElementById('previewBlock').style.borderLeftColor = colors[ntype] || 'var(--c-primary)';
+  document.getElementById('previewTarget').textContent = '→ ' + (target.selectedOptions[0]?.text || 'All Users');
+  document.getElementById('previewPriority').textContent = 'Priority: ' + priority.charAt(0).toUpperCase() + priority.slice(1);
+}
+function updateCharCount(){
+  const len = document.getElementById('msgInput').value.length;
+  document.getElementById('charCount').textContent = len + ' / 500 characters';
+  document.getElementById('charCount').style.color = len > 450 ? 'var(--c-danger)' : 'var(--text-500)';
+}
+document.getElementById('ntypeSelect').addEventListener('change', updatePreview);
+document.getElementById('titleInput').addEventListener('input', updatePreview);
+document.getElementById('msgInput').addEventListener('input', function(){ updatePreview(); updateCharCount(); });
+document.getElementById('targetSelect').addEventListener('change', updatePreview);
+document.getElementById('prioritySelect').addEventListener('change', updatePreview);
+</script>
+{% endblock %}

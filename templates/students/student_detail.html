@@ -1,0 +1,236 @@
+{% extends 'base.html' %}
+{% block title %}{{ student.full_name }} — EduAdmin Pro{% endblock %}
+{% block page_title %}Student Profile{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'student_list' %}">Students</a></li>
+<li class="breadcrumb-item active">{{ student.full_name }}</li>
+{% endblock %}
+
+{% block content %}
+<div style="display:grid;grid-template-columns:280px 1fr;gap:16px;align-items:start;">
+
+  <!-- ── Left: Profile Card ── -->
+  <div style="display:flex;flex-direction:column;gap:12px;">
+    <div class="card" style="text-align:center;padding:24px 18px;">
+      <div style="display:flex;justify-content:center;margin-bottom:14px;">
+        {% if student.photo %}
+          <img src="{{ student.photo.url }}" class="profile-avatar" alt="{{ student.full_name }}" style="width:88px;height:88px;border-radius:50%;object-fit:cover;border:3px solid var(--c-primary);box-shadow:0 0 20px rgba(59,130,246,0.3);"/>
+        {% else %}
+          <div style="width:88px;height:88px;border-radius:50%;background:linear-gradient(135deg,#1E3A8A,#2563EB);display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:800;color:#fff;border:3px solid var(--border);box-shadow:0 0 20px rgba(59,130,246,0.2);">{{ student.full_name|first|upper }}</div>
+        {% endif %}
+      </div>
+      <div style="font-size:16px;font-weight:700;color:var(--text-900);margin-bottom:2px;">{{ student.full_name }}</div>
+      <div style="font-size:11.5px;color:var(--text-500);font-family:monospace;margin-bottom:8px;">{{ student.student_id }}</div>
+      <span class="badge badge-{{ student.status }}" style="margin-bottom:14px;">● {{ student.status|title }}</span>
+
+      <!-- Mini Stats -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;padding:12px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-bottom:14px;">
+        <div>
+          <div style="font-size:18px;font-weight:800;color:{% if student.gpa >= 3.5 %}var(--c-success){% elif student.gpa >= 2.5 %}var(--c-warning){% else %}var(--c-danger){% endif %};">{{ student.gpa }}</div>
+          <div style="font-size:10px;color:var(--text-500);">GPA</div>
+        </div>
+        <div>
+          <div style="font-size:18px;font-weight:800;color:var(--c-primary);">{{ student.attendance_percentage }}%</div>
+          <div style="font-size:10px;color:var(--text-500);">Attend.</div>
+        </div>
+        <div>
+          <div style="font-size:18px;font-weight:800;color:var(--text-900);">{{ student.results.count }}</div>
+          <div style="font-size:10px;color:var(--text-500);">Results</div>
+        </div>
+      </div>
+
+      <div style="font-size:12.5px;color:var(--text-500);text-align:left;display:flex;flex-direction:column;gap:6px;margin-bottom:14px;">
+        {% if student.email %}<div>✉ {{ student.email }}</div>{% endif %}
+        {% if student.phone %}<div>📞 {{ student.phone }}</div>{% endif %}
+        {% if student.gender %}<div>👤 {{ student.gender|title }}</div>{% endif %}
+        {% if student.date_of_birth %}<div>🎂 {{ student.date_of_birth|date:"M d, Y" }}</div>{% endif %}
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;">
+        <a href="{% url 'student_edit' student.pk %}" class="btn btn-primary" style="justify-content:center;font-size:11.5px;padding:6px 8px;">✏ Edit Profile</a>
+        <a href="{% url 'student_id_card' student.pk %}" class="btn btn-outline" style="justify-content:center;font-size:11.5px;padding:6px 8px;">🪪 View ID</a>
+        <a href="{% url 'student_marksheet_pdf' student.pk %}" class="btn btn-outline" style="justify-content:center;font-size:11.5px;padding:6px 8px;">📄 Marksheet</a>
+        <a href="{% url 'student_bonafide_pdf' student.pk %}" class="btn btn-outline" style="justify-content:center;font-size:11.5px;padding:6px 8px;">📜 Bonafide</a>
+      </div>
+      <a href="{% url 'student_id_card_pdf' student.pk %}" class="btn btn-outline" style="width:100%;justify-content:center;margin-bottom:6px;font-size:12px;">📄 Download ID Card (PDF)</a>
+      <a href="{% url 'student_delete' student.pk %}" class="btn btn-outline" style="width:100%;justify-content:center;color:var(--c-danger);font-size:12px;"
+         data-confirm-href="{% url 'student_delete' student.pk %}"
+         data-confirm-message="Delete {{ student.full_name }}? This action cannot be undone.">🗑 Delete Student</a>
+    </div>
+
+    <!-- Risk Card -->
+    <div class="card" style="padding:16px;">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text-500);margin-bottom:10px;">Academic Status</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:12.5px;color:var(--text-500);">Risk Level</span>
+          <span class="badge {% if student.risk_level == 'low' %}badge-active{% elif student.risk_level == 'medium' %}badge-pending{% else %}badge-overdue{% endif %}">{{ student.risk_level|title }}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:12.5px;color:var(--text-500);">Pass / Fail</span>
+          <span class="badge {% if student.pass_fail_status == 'pass' %}badge-active{% else %}badge-overdue{% endif %}">{{ student.pass_fail_status|title }}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:12.5px;color:var(--text-500);">Year</span>
+          <span style="font-size:13px;font-weight:600;color:var(--text-900);">{{ student.year_of_admission }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Right: Details ── -->
+  <div style="display:flex;flex-direction:column;gap:14px;">
+
+    <!-- Personal Info -->
+    <div class="card">
+      <div class="card-header"><span class="card-title">👤 Personal Information</span></div>
+      <div class="card-body">
+        <div class="info-row">
+          <div class="info-item"><div class="info-label">Full Name</div><div class="info-value">{{ student.full_name }}</div></div>
+          <div class="info-item"><div class="info-label">Roll Number</div><div class="info-value" style="font-family:monospace;">{{ student.roll_number }}</div></div>
+          <div class="info-item"><div class="info-label">Email</div><div class="info-value">{{ student.email }}</div></div>
+          <div class="info-item"><div class="info-label">Phone</div><div class="info-value">{{ student.phone|default:"—" }}</div></div>
+          <div class="info-item"><div class="info-label">Gender</div><div class="info-value">{{ student.gender|title }}</div></div>
+          <div class="info-item"><div class="info-label">Date of Birth</div><div class="info-value">{{ student.date_of_birth|date:"M d, Y"|default:"—" }}</div></div>
+          <div class="info-item" style="grid-column:1/-1"><div class="info-label">Address</div><div class="info-value">{{ student.address|default:"—" }}</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Performance Charts -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+      <div class="card">
+        <div class="card-header"><span class="card-title">📊 Results by Course</span></div>
+        <div class="card-body"><div id="resultsChart" style="height:200px;"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">📅 Attendance Breakdown</span></div>
+        <div class="card-body"><div id="attendanceChart" style="height:200px;"></div></div>
+      </div>
+    </div>
+
+    <!-- Academic Info -->
+    <div class="card">
+      <div class="card-header"><span class="card-title">🎓 Academic Information</span></div>
+      <div class="card-body">
+        <div class="info-row">
+          <div class="info-item"><div class="info-label">Department</div><div class="info-value">{{ student.department|default:"—" }}</div></div>
+          <div class="info-item"><div class="info-label">Course</div><div class="info-value">{{ student.course|default:"—" }}</div></div>
+          <div class="info-item"><div class="info-label">GPA</div><div class="info-value"><span class="badge {% if student.gpa >= 3.5 %}badge-active{% elif student.gpa >= 2.5 %}badge-pending{% else %}badge-overdue{% endif %}" style="font-size:13px;">{{ student.gpa }}</span></div></div>
+          <div class="info-item"><div class="info-label">Attendance</div><div class="info-value"><span class="badge {% if student.attendance_percentage >= 75 %}badge-active{% elif student.attendance_percentage >= 60 %}badge-pending{% else %}badge-overdue{% endif %}" style="font-size:13px;">{{ student.attendance_percentage }}%</span></div></div>
+          <div class="info-item"><div class="info-label">CGPA</div><div class="info-value">{{ student.cgpa }}</div></div>
+          <div class="info-item"><div class="info-label">Class Rank</div><div class="info-value">{{ student.class_rank|default:"—" }}</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Parent Info -->
+    <div class="card">
+      <div class="card-header"><span class="card-title">👨‍👩‍👧 Parent / Guardian</span></div>
+      <div class="card-body">
+        <div class="info-row">
+          <div class="info-item"><div class="info-label">Name</div><div class="info-value">{{ student.parent_name|default:"—" }}</div></div>
+          <div class="info-item"><div class="info-label">Phone</div><div class="info-value">{{ student.parent_phone|default:"—" }}</div></div>
+          <div class="info-item"><div class="info-label">Email</div><div class="info-value">{{ student.parent_email|default:"—" }}</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Attendance + Results Tables -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">✅ Recent Attendance</span>
+          <a href="{% url 'attendance_add' %}" class="btn btn-sm btn-outline">+ Mark</a>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Date</th><th>Status</th><th>Note</th></tr></thead>
+            <tbody>
+              {% for rec in attendance_records %}
+              <tr>
+                <td style="font-size:12px;">{{ rec.date|date:"M d, Y" }}</td>
+                <td><span class="badge badge-{{ rec.status }}">{{ rec.status|title }}</span></td>
+                <td style="font-size:11.5px;color:var(--text-500);">{{ rec.remarks|default:"—"|truncatechars:20 }}</td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="3" style="text-align:center;color:var(--text-500);padding:20px;font-size:12.5px;">No records</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">📋 Exam Results</span>
+          <a href="{% url 'result_add' %}" class="btn btn-sm btn-outline">+ Add</a>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Course</th><th>Marks</th><th>Grade</th></tr></thead>
+            <tbody>
+              {% for result in results %}
+              <tr>
+                <td style="font-size:12px;font-weight:500;">{{ result.course.code }}</td>
+                <td style="font-size:12px;">{{ result.marks_obtained }}<span style="color:var(--text-500);">/{{ result.total_marks }}</span></td>
+                <td><span class="badge badge-primary">{{ result.grade }}</span></td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="3" style="text-align:center;color:var(--text-500);padding:20px;font-size:12.5px;">No results yet</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const isDark = () => document.documentElement.getAttribute('data-theme') !== 'light';
+const tc = () => isDark() ? '#475569' : '#64748B';
+
+// Results chart
+const resultLabels = [{% for r in results %}"{{ r.course.code }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+const resultMarks  = [{% for r in results %}{{ r.marks_obtained }}{% if not forloop.last %},{% endif %}{% endfor %}];
+if (resultLabels.length && document.getElementById('resultsChart')) {
+  new ApexCharts(document.getElementById('resultsChart'), {
+    chart:{type:'bar',height:200,toolbar:{show:false},background:'transparent',fontFamily:'Inter,sans-serif'},
+    series:[{name:'Marks',data:resultMarks}],
+    xaxis:{categories:resultLabels,labels:{style:{colors:tc(),fontSize:'10px'}}},
+    yaxis:{max:100,labels:{style:{colors:tc(),fontSize:'10px'}}},
+    colors:['#3B82F6'],
+    plotOptions:{bar:{borderRadius:4,columnWidth:'55%'}},
+    dataLabels:{enabled:false},
+    grid:{borderColor:isDark()?'rgba(59,130,246,0.08)':'#F1F5F9',strokeDashArray:4},
+    tooltip:{theme:isDark()?'dark':'light'},
+  }).render();
+} else if(document.getElementById('resultsChart')){
+  document.getElementById('resultsChart').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:200px;color:var(--text-500);font-size:13px;">No results data</div>';
+}
+
+// Attendance chart
+const attPresent = {{ att_present|default:0 }};
+const attAbsent  = {{ att_absent|default:0 }};
+const attLate    = {{ att_late|default:0 }};
+const attExcused = {{ att_excused|default:0 }};
+if ((attPresent + attAbsent + attLate + attExcused) > 0 && document.getElementById('attendanceChart')) {
+  new ApexCharts(document.getElementById('attendanceChart'), {
+    chart:{type:'donut',height:200,background:'transparent',fontFamily:'Inter,sans-serif'},
+    series:[attPresent, attAbsent, attLate, attExcused],
+    labels:['Present','Absent','Late','Excused'],
+    colors:['#22C55E','#EF4444','#F59E0B','#06B6D4'],
+    legend:{show:true,position:'bottom',labels:{colors:tc()},fontSize:'11px'},
+    dataLabels:{enabled:false},
+    plotOptions:{pie:{donut:{size:'65%'}}},
+    tooltip:{theme:isDark()?'dark':'light'},
+  }).render();
+} else if(document.getElementById('attendanceChart')){
+  document.getElementById('attendanceChart').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:200px;color:var(--text-500);font-size:13px;">No attendance data</div>';
+}
+</script>
+{% endblock %}

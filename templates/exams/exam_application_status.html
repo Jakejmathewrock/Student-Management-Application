@@ -1,0 +1,86 @@
+{% extends 'base_portal.html' %}
+{% block title %}Application — {{ app.exam.title }}{% endblock %}
+{% block page_title %}Application Status{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'exam_portal' %}">Exam Portal</a></li>
+<li class="breadcrumb-item active">Application</li>
+{% endblock %}
+
+{% block content %}
+<div style="max-width:680px;margin:0 auto;">
+  <div class="card" style="overflow:hidden;">
+    <div style="height:4px;background:
+      {% if app.status == 'approved' %}linear-gradient(90deg,#22C55E,#16A34A)
+      {% elif app.status == 'pending' %}linear-gradient(90deg,#F59E0B,#D97706)
+      {% elif app.status == 'rejected' %}linear-gradient(90deg,#EF4444,#DC2626)
+      {% else %}linear-gradient(90deg,#6B7280,#4B5563){% endif %};"></div>
+
+    <div style="padding:24px;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px;">
+        <div>
+          <h4 style="font-size:18px;font-weight:800;color:var(--text-900);margin-bottom:6px;">{{ app.exam.title }}</h4>
+          <div style="font-size:13px;color:var(--text-500);">
+            📅 {{ app.exam.exam_date|date:"l, F d, Y" }} · 🕐 {{ app.exam.start_time|time:"H:i" }}–{{ app.exam.end_time|time:"H:i" }}
+          </div>
+        </div>
+        <span class="badge {% if app.status == 'approved' %}badge-active{% elif app.status == 'pending' %}badge-pending{% elif app.status == 'rejected' %}badge-overdue{% else %}badge-inactive{% endif %}" style="font-size:12px;padding:6px 12px;">
+          ● {{ app.get_status_display }}
+        </span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+        <div style="padding:14px;background:var(--bg);border-radius:8px;">
+          <div style="font-size:10px;color:var(--text-500);text-transform:uppercase;margin-bottom:4px;">Exam Fee Paid</div>
+          <div style="font-size:22px;font-weight:800;color:var(--c-success);">
+            {% if app.fee_paid > 0 %}₹{{ app.fee_paid|floatformat:0 }}{% else %}—{% endif %}
+          </div>
+        </div>
+        <div style="padding:14px;background:var(--bg);border-radius:8px;">
+          <div style="font-size:10px;color:var(--text-500);text-transform:uppercase;margin-bottom:4px;">Payment Status</div>
+          <div style="margin-top:4px;">
+            <span class="badge {% if app.payment_status == 'paid' %}badge-active{% elif app.payment_status == 'waived' %}badge-pending{% else %}badge-overdue{% endif %}">
+              {{ app.get_payment_status_display }}
+            </span>
+          </div>
+        </div>
+        <div style="padding:14px;background:var(--bg);border-radius:8px;">
+          <div style="font-size:10px;color:var(--text-500);text-transform:uppercase;margin-bottom:4px;">Applied On</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text-900);">{{ app.applied_at|date:"M d, Y H:i" }}</div>
+        </div>
+        <div style="padding:14px;background:var(--bg);border-radius:8px;">
+          <div style="font-size:10px;color:var(--text-500);text-transform:uppercase;margin-bottom:4px;">Venue</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text-900);">{{ app.exam.venue|default:"TBA" }}</div>
+        </div>
+      </div>
+
+      <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:20px;">
+        <div style="padding:10px 14px;background:var(--bg);font-size:11px;font-weight:600;color:var(--text-500);text-transform:uppercase;">Payment Details</div>
+        <div style="padding:14px;font-size:13px;display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-500);">UPI ID</span><span>{{ app.upi_id|default:"—" }}</span></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-500);">Transaction ID</span><span style="font-family:monospace;color:var(--c-primary);">{{ app.transaction_id|default:"—" }}</span></div>
+          {% if app.hall_ticket_no %}
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-500);">Hall Ticket No.</span><span style="font-family:monospace;font-weight:700;color:var(--c-success);">{{ app.hall_ticket_no }}</span></div>
+          {% endif %}
+        </div>
+      </div>
+
+      {% if app.status == 'approved' and app.hall_ticket_no %}
+      <a href="{% url 'hall_ticket' app.pk %}" class="btn btn-primary" target="_blank" style="width:100%;justify-content:center;margin-bottom:10px;">
+        🎫 Download Hall Ticket
+      </a>
+      {% elif app.status == 'pending' %}
+      <div style="padding:12px 14px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);border-radius:8px;font-size:13px;color:var(--text-500);margin-bottom:10px;">
+        ⏳ Your application is under review. You will receive your hall ticket once approved by the admin.
+      </div>
+      {% elif app.status == 'rejected' %}
+      <div style="padding:12px 14px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:8px;font-size:13px;color:var(--c-danger);margin-bottom:10px;">
+        ✗ This application was rejected. Contact the admin for details.
+      </div>
+      {% endif %}
+
+      <a href="{% url 'exam_portal' %}" class="btn btn-secondary" style="width:100%;justify-content:center;">← Back to Exam Portal</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

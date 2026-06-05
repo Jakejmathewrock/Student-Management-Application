@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% block title %}Laundry Portal — EduAdmin Pro{% endblock %}
+{% block page_title %}Laundry Services{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+<li class="breadcrumb-item active">Laundry</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.service-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  transition: var(--transition);
+  cursor: pointer;
+}
+.service-card:hover {
+  border-color: var(--c-primary);
+  box-shadow: 0 4px 20px rgba(59,130,246,0.12);
+  transform: translateY(-2px);
+}
+.cat-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 0 8px;
+  border-bottom: 2px solid var(--c-primary);
+  margin-bottom: 14px;
+}
+.cat-header span { font-size: 15px; font-weight: 700; color: var(--text-900); }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Banner -->
+<div style="background:linear-gradient(135deg,#1E3A8A,#2563EB,#3B82F6);border-radius:var(--radius-lg);padding:28px 32px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
+  <div>
+    <div style="font-size:22px;font-weight:800;color:#fff;margin-bottom:6px;">🧺 Campus Laundry Service</div>
+    <div style="font-size:14px;color:rgba(255,255,255,0.75);">Book laundry services online — pick up & delivery at your hostel room.</div>
+    <div style="display:flex;gap:12px;margin-top:14px;">
+      <span style="background:rgba(255,255,255,0.15);color:#fff;padding:4px 12px;border-radius:50px;font-size:12.5px;">⚡ 24hr turnaround</span>
+      <span style="background:rgba(255,255,255,0.15);color:#fff;padding:4px 12px;border-radius:50px;font-size:12.5px;">💳 Pay via UPI</span>
+      <span style="background:rgba(255,255,255,0.15);color:#fff;padding:4px 12px;border-radius:50px;font-size:12.5px;">🚪 Room delivery</span>
+    </div>
+  </div>
+  <a href="{% url 'laundry_place_order' %}" class="btn btn-primary" style="background:#fff;color:#2563EB;border:none;font-weight:700;font-size:14px;padding:10px 24px;">
+    + Place New Order
+  </a>
+</div>
+
+<!-- Service Catalogue by Category -->
+{% for category, services in grouped.items %}
+<div style="margin-bottom:28px;">
+  <div class="cat-header">
+    <span>{{ services.0.emoji }} {{ category }}</span>
+    <span class="badge badge-primary">{{ services|length }} service{{ services|length|pluralize }}</span>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;">
+    {% for svc in services %}
+    <div class="service-card">
+      <div style="font-size:28px;margin-bottom:8px;">{{ svc.emoji }}</div>
+      <div style="font-size:13.5px;font-weight:700;color:var(--text-900);margin-bottom:4px;">{{ svc.name }}</div>
+      {% if svc.description %}
+      <div style="font-size:12px;color:var(--text-500);margin-bottom:8px;line-height:1.4;">{{ svc.description }}</div>
+      {% endif %}
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:auto;">
+        <div>
+          <span style="font-size:18px;font-weight:800;color:var(--c-success);">₹{{ svc.price_per_item }}</span>
+          <span style="font-size:11px;color:var(--text-500);margin-left:2px;">/ {{ svc.unit }}</span>
+        </div>
+        <span style="font-size:11px;color:var(--text-500);background:var(--bg);padding:3px 8px;border-radius:50px;">⏱ {{ svc.turnaround_hrs }}h</span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endfor %}
+
+<!-- My Recent Orders -->
+{% if my_orders %}
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">🧺 My Recent Orders</span>
+    <a href="{% url 'laundry_my_orders' %}" class="btn btn-sm btn-outline">View All →</a>
+  </div>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th>Order #</th><th>Date</th><th>Items</th><th>Amount</th><th>Status</th><th>Action</th></tr></thead>
+      <tbody>
+        {% for order in my_orders %}
+        <tr>
+          <td style="font-family:monospace;color:var(--c-primary);font-weight:600;">{{ order.order_number }}</td>
+          <td style="font-size:12.5px;color:var(--text-500);">{{ order.ordered_at|date:"M d, Y" }}</td>
+          <td style="font-size:12.5px;">{{ order.items.count }} item{{ order.items.count|pluralize }}</td>
+          <td style="font-weight:700;color:var(--c-success);">₹{{ order.total_amount|floatformat:0 }}</td>
+          <td>
+            <span class="badge {% if order.status == 'delivered' %}badge-active{% elif order.status == 'ready' %}badge-primary{% elif order.status == 'processing' or order.status == 'collected' %}badge-pending{% elif order.status == 'cancelled' %}badge-overdue{% else %}badge-inactive{% endif %}">
+              ● {{ order.get_status_display }}
+            </span>
+          </td>
+          <td><a href="{% url 'laundry_order_detail' order.pk %}" class="btn btn-sm btn-outline" style="font-size:11.5px;">View</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

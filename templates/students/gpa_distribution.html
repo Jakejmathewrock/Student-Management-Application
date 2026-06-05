@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% block title %}GPA Distribution — EduAdmin Pro{% endblock %}
+{% block page_title %}GPA Distribution{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+<li class="breadcrumb-item active">GPA Distribution</li>
+{% endblock %}
+
+{% block content %}
+<!-- Summary Cards -->
+<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:20px;">
+  <div class="kpi-card" style="--kpi-color:#3B82F6;--kpi-bg:rgba(59,130,246,0.12);">
+    <div class="kpi-value" style="font-size:28px;">{{ total }}</div>
+    <div class="kpi-label">Total Students</div>
+    <div class="kpi-sub">Avg GPA: {{ avg_gpa|floatformat:2 }}</div>
+  </div>
+  <div class="kpi-card" style="--kpi-color:#22C55E;--kpi-bg:rgba(34,197,94,0.12);">
+    <div class="kpi-value" style="font-size:28px;color:var(--c-success);">{{ excellent }}</div>
+    <div class="kpi-label">Excellent</div>
+    <div class="kpi-sub">GPA ≥ 3.5</div>
+  </div>
+  <div class="kpi-card" style="--kpi-color:#3B82F6;--kpi-bg:rgba(59,130,246,0.12);">
+    <div class="kpi-value" style="font-size:28px;color:var(--c-primary);">{{ good }}</div>
+    <div class="kpi-label">Good</div>
+    <div class="kpi-sub">GPA 2.5 – 3.5</div>
+  </div>
+  <div class="kpi-card" style="--kpi-color:#F59E0B;--kpi-bg:rgba(245,158,11,0.12);">
+    <div class="kpi-value" style="font-size:28px;color:var(--c-warning);">{{ average }}</div>
+    <div class="kpi-label">Average</div>
+    <div class="kpi-sub">GPA 1.5 – 2.5</div>
+  </div>
+  <div class="kpi-card" style="--kpi-color:#EF4444;--kpi-bg:rgba(239,68,68,0.12);">
+    <div class="kpi-value" style="font-size:28px;color:var(--c-danger);">{{ poor }}</div>
+    <div class="kpi-label">Needs Help</div>
+    <div class="kpi-sub">GPA &lt; 1.5</div>
+  </div>
+</div>
+
+<!-- Chart + Breakdown -->
+<div style="display:grid;grid-template-columns:400px 1fr;gap:14px;margin-bottom:20px;">
+  <div class="card">
+    <div class="card-header"><span class="card-title">📊 GPA Donut</span></div>
+    <div class="card-body">
+      <div id="gpaDonut" style="height:280px;"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><span class="card-title">📈 GPA Bar Distribution</span></div>
+    <div class="card-body">
+      <div id="gpaBar" style="height:280px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Student Tables by category -->
+{% for category, students_qs, color, label in categories %}
+{% if students_qs %}
+<div class="card" style="margin-bottom:14px;">
+  <div class="card-header" style="border-left:4px solid {{ color }};">
+    <span class="card-title">{{ label }} — {{ students_qs|length }} students</span>
+    <span class="badge" style="background:{{ color }}22;color:{{ color }};">{{ label }}</span>
+  </div>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr><th>Student</th><th>Roll No.</th><th>Department</th><th>GPA</th><th>Attendance</th><th>Risk</th></tr>
+      </thead>
+      <tbody>
+        {% for student in students_qs %}
+        <tr data-row-href="{% url 'student_detail' student.pk %}" style="cursor:pointer;">
+          <td>
+            <div class="cell-user">
+              {% if student.photo %}<img src="{{ student.photo.url }}" class="cell-avatar" alt=""/>
+              {% else %}<div class="cell-avatar-placeholder">{{ student.full_name|first|upper }}</div>{% endif %}
+              <div><div class="cell-name">{{ student.full_name }}</div><div class="cell-sub">{{ student.student_id }}</div></div>
+            </div>
+          </td>
+          <td style="font-family:monospace;font-size:12px;color:var(--text-500);">{{ student.roll_number }}</td>
+          <td style="color:var(--text-500);font-size:12.5px;">{{ student.department|default:"—" }}</td>
+          <td><span class="badge {% if student.gpa >= 3.5 %}badge-active{% elif student.gpa >= 2.5 %}badge-pending{% else %}badge-overdue{% endif %}" style="font-size:13px;font-weight:700;">{{ student.gpa }}</span></td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div class="progress-bar-wrap"><div class="progress-bar-fill {% if student.attendance_percentage >= 75 %}fill-success{% elif student.attendance_percentage >= 60 %}fill-warning{% else %}fill-danger{% endif %}" style="width:{{ student.attendance_percentage }}%;"></div></div>
+              <span style="font-size:11.5px;color:var(--text-500);">{{ student.attendance_percentage }}%</span>
+            </div>
+          </td>
+          <td>
+            <span class="badge {% if student.risk_level == 'low' %}badge-active{% elif student.risk_level == 'medium' %}badge-pending{% else %}badge-overdue{% endif %}">{{ student.risk_level|title }}</span>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endfor %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const isDark = () => document.documentElement.getAttribute('data-theme') !== 'light';
+const tc = () => isDark() ? '#475569' : '#64748B';
+new ApexCharts(document.getElementById('gpaDonut'), {
+  chart:{type:'donut',height:280,background:'transparent',fontFamily:'Inter,sans-serif'},
+  series:[{{ excellent }},{{ good }},{{ average }},{{ poor }}],
+  labels:['Excellent (≥3.5)','Good (2.5-3.5)','Average (1.5-2.5)','Poor (<1.5)'],
+  colors:['#22C55E','#3B82F6','#F59E0B','#EF4444'],
+  legend:{show:true,position:'bottom',labels:{colors:tc()}},
+  dataLabels:{enabled:true,style:{fontSize:'11px'}},
+  plotOptions:{pie:{donut:{size:'60%'}}},
+  tooltip:{theme:isDark()?'dark':'light'},
+}).render();
+
+new ApexCharts(document.getElementById('gpaBar'), {
+  chart:{type:'bar',height:280,background:'transparent',fontFamily:'Inter,sans-serif',toolbar:{show:false}},
+  series:[{name:'Students',data:[{{ excellent }},{{ good }},{{ average }},{{ poor }}]}],
+  xaxis:{categories:['Excellent\n(≥3.5)','Good\n(2.5-3.5)','Average\n(1.5-2.5)','Poor\n(<1.5)'],labels:{style:{colors:tc(),fontSize:'11px'}}},
+  yaxis:{labels:{style:{colors:tc(),fontSize:'11px'}}},
+  colors:['#22C55E','#3B82F6','#F59E0B','#EF4444'],
+  plotOptions:{bar:{borderRadius:6,columnWidth:'48%',distributed:true}},
+  legend:{show:false},
+  dataLabels:{enabled:true,style:{fontSize:'13px',fontWeight:'700'}},
+  grid:{borderColor:isDark()?'rgba(59,130,246,0.08)':'#F1F5F9',strokeDashArray:4},
+  tooltip:{theme:isDark()?'dark':'light'},
+}).render();
+</script>
+{% endblock %}

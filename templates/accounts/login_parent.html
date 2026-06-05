@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Parent Sign In — EduAdmin Pro</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  {% include 'accounts/_login_auth_styles.html' %}
+  <style>.submit-btn{background:linear-gradient(135deg,#7c3aed,#6d28d9);}.tagline{font-size:26px;font-weight:800;color:#e8f0ff;}.tagline span{color:#a78bfa;}.desc{font-size:13px;color:#4a6fa5;line-height:1.65;}</style>
+</head>
+<body>
+<div class="left">
+  <h1 class="tagline">Parent <span>portal</span></h1>
+  <p class="desc">Monitor your child's attendance, fees, exam applications, and academic results.</p>
+</div>
+<div class="right">
+  <div style="width:100%;">
+    <div class="form-title">👨‍👩‍👧 Parent Login</div>
+    <div class="form-sub">Sign in with your registered parent email account</div>
+    {% if messages %}{% for message in messages %}<div class="error-box">{{ message }}</div>{% endfor %}{% endif %}
+    <form method="POST">{% csrf_token %}
+      <div class="field"><label>Username</label><div class="input-wrap"><span class="ico">👤</span><input type="text" name="username" placeholder="parent username" required autofocus/></div></div>
+      <div class="field"><label>Password</label><div class="input-wrap"><span class="ico">🔒</span><input type="password" name="password" placeholder="••••••••" required/></div></div>
+      <button type="submit" class="submit-btn">Sign In →</button>
+    </form>
+    <div class="demo-box">Demo: <code>parent_cs001</code> / <code>parent123</code></div>
+    <a href="{% url 'login' %}" class="back-link">← All login options</a>
+  </div>
+</div>
+</body>
+</html>

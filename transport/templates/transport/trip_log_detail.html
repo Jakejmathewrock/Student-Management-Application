@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}Trip — {{ trip.route.route_number }} {{ trip.trip_date }}{% endblock %}
+{% block page_title %}Trip Log Detail{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'transport_dashboard' %}">Transport</a></li>
+<li class="breadcrumb-item"><a href="{% url 'trip_log_list' %}">Trip Logs</a></li>
+<li class="breadcrumb-item active">{{ trip.route.route_number }} · {{ trip.trip_date }}</li>
+{% endblock %}
+{% block content %}
+<div style="max-width:700px;">
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">🛣 Trip Detail</span>
+    <div style="display:flex;gap:8px;">
+      <a href="{% url 'trip_log_edit' trip.pk %}" class="btn btn-sm btn-primary">Edit</a>
+      <a href="{% url 'trip_log_delete' trip.pk %}" class="btn btn-sm btn-outline" style="color:var(--c-danger);">Delete</a>
+    </div>
+  </div>
+  <div class="card-body">
+    <div class="info-row">
+      <div class="info-item"><div class="info-label">Route</div><div class="info-value"><span class="badge badge-primary">{{ trip.route.route_number }}</span> {{ trip.route.route_name }}</div></div>
+      <div class="info-item"><div class="info-label">Vehicle</div><div class="info-value" style="font-family:monospace;color:var(--c-primary);">{{ trip.vehicle.vehicle_number }} — {{ trip.vehicle.make_model }}</div></div>
+      <div class="info-item"><div class="info-label">Driver</div><div class="info-value">{{ trip.driver.full_name }}</div></div>
+      <div class="info-item"><div class="info-label">Trip Date</div><div class="info-value">{{ trip.trip_date|date:"M d, Y" }}</div></div>
+      <div class="info-item"><div class="info-label">Departure Time</div><div class="info-value">{{ trip.departure_time }}</div></div>
+      <div class="info-item"><div class="info-label">Arrival Time</div><div class="info-value">{{ trip.arrival_time|default:"—" }}</div></div>
+      <div class="info-item"><div class="info-label">Starting Odometer</div><div class="info-value">{{ trip.starting_odometer }} km</div></div>
+      <div class="info-item"><div class="info-label">Ending Odometer</div><div class="info-value">{{ trip.ending_odometer|default:"—" }}{% if trip.ending_odometer %} km{% endif %}</div></div>
+      <div class="info-item"><div class="info-label">Distance Covered</div><div class="info-value" style="font-size:18px;font-weight:700;color:var(--text-900);">{{ trip.distance_covered }} km</div></div>
+      <div class="info-item"><div class="info-label">Status</div><div class="info-value"><span class="badge {% if trip.status == 'completed' %}badge-active{% elif trip.status == 'in_transit' %}badge-pending{% elif trip.status == 'cancelled' %}badge-inactive{% else %}badge-primary{% endif %}">● {{ trip.get_status_display }}</span></div></div>
+      {% if trip.remarks %}<div class="info-item" style="grid-column:1/-1;"><div class="info-label">Remarks</div><div class="info-value">{{ trip.remarks }}</div></div>{% endif %}
+    </div>
+  </div>
+</div>
+</div>
+{% endblock %}

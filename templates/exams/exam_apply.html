@@ -1,0 +1,108 @@
+{% extends 'base_portal.html' %}
+{% block title %}Apply — {{ exam.title }}{% endblock %}
+{% block page_title %}Apply for Exam{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'exam_portal' %}">Exam Portal</a></li>
+<li class="breadcrumb-item active">Apply</li>
+{% endblock %}
+
+{% block content %}
+<div style="max-width:640px;margin:0 auto;">
+  <div class="card" style="overflow:visible;">
+    <!-- Exam summary -->
+    <div style="padding:20px 24px;border-bottom:1px solid var(--border);">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+        <div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+            <span class="badge badge-primary">{{ exam.get_exam_type_display }}</span>
+            {% if exam.course %}<span class="badge badge-purple">{{ exam.course.code }}</span>{% endif %}
+          </div>
+          <h4 style="font-size:18px;font-weight:800;color:var(--text-900);margin-bottom:6px;">{{ exam.title }}</h4>
+          <div style="font-size:13px;color:var(--text-500);line-height:1.6;">
+            📅 {{ exam.exam_date|date:"l, F d, Y" }}<br>
+            🕐 {{ exam.start_time|time:"H:i" }} – {{ exam.end_time|time:"H:i" }}<br>
+            📍 {{ exam.venue|default:"TBA" }}
+          </div>
+        </div>
+        <div style="text-align:center;padding:14px 20px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.25);border-radius:10px;min-width:120px;">
+          {% if exam.fee_required %}
+          <div style="font-size:28px;font-weight:900;color:var(--c-success);">₹{{ exam.exam_fee|floatformat:0 }}</div>
+          <div style="font-size:11px;font-weight:600;color:var(--text-500);text-transform:uppercase;letter-spacing:.5px;">Exam Fee</div>
+          {% else %}
+          <div style="font-size:20px;font-weight:800;color:var(--c-primary);">Free</div>
+          <div style="font-size:11px;color:var(--text-500);">Fee waived</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Student -->
+    <div style="padding:16px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;">
+      <div class="cell-avatar-placeholder" style="width:42px;height:42px;font-size:16px;">{{ student.full_name|first|upper }}</div>
+      <div>
+        <div style="font-size:14px;font-weight:700;color:var(--text-900);">{{ student.full_name }}</div>
+        <div style="font-size:12px;color:var(--text-500);">{{ student.roll_number }} · {{ student.department|default:"—" }}</div>
+      </div>
+    </div>
+
+    <!-- Application form -->
+    <form method="POST" style="padding:20px 24px;">
+      {% csrf_token %}
+
+      <div style="font-size:12px;font-weight:600;color:var(--text-500);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;">
+        {% if exam.fee_required %}Online Payment & Application{% else %}Confirm Application{% endif %}
+      </div>
+
+      {% if form.errors %}
+      <div style="margin-bottom:14px;padding:12px;background:var(--c-danger-s);border-radius:8px;font-size:13px;color:var(--c-danger);">
+        {% for field in form %}{% for e in field.errors %}<div>{{ e }}</div>{% endfor %}{% endfor %}
+        {% for e in form.non_field_errors %}<div>{{ e }}</div>{% endfor %}
+      </div>
+      {% endif %}
+
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div>
+          <label class="field-label {% if exam.fee_required %}required{% endif %}">Your UPI ID</label>
+          {{ form.upi_id }}
+          <div style="font-size:11.5px;color:var(--text-500);margin-top:4px;">Used for payment verification (e.g. name@paytm)</div>
+        </div>
+
+        <label style="display:flex;align-items:flex-start;gap:10px;font-size:13.5px;color:var(--text-700);cursor:pointer;padding:12px;background:var(--bg);border-radius:8px;border:1px solid var(--border);">
+          {{ form.confirm }}
+          <span>
+            {% if exam.fee_required %}
+            I confirm that I have paid <strong>₹{{ exam.exam_fee|floatformat:0 }}</strong> exam fee via UPI and want to submit my application.
+            {% else %}
+            I confirm that I want to submit my application for this exam (no fee required).
+            {% endif %}
+          </span>
+        </label>
+      </div>
+
+      {% if exam.fee_required %}
+      <div style="margin-top:16px;padding:12px 16px;background:var(--c-primary-s);border-radius:var(--radius-sm);font-size:12.5px;color:var(--text-500);">
+        💳 Pay <strong style="color:var(--c-success);">₹{{ exam.exam_fee|floatformat:0 }}</strong> via UPI to:
+        <strong style="color:var(--c-primary);">{{ upi_account }}</strong>
+        then enter your UPI ID above and submit.
+      </div>
+      {% endif %}
+
+      <div style="display:flex;gap:10px;margin-top:20px;">
+        <a href="{% url 'exam_portal' %}" class="btn btn-secondary" style="flex:1;justify-content:center;">Cancel</a>
+        <button type="submit" class="btn btn-primary" style="flex:2;justify-content:center;">
+          ✓ Submit Application
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.card input[type="text"]{width:100%;padding:8px 11px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-900);font-size:13px;font-family:inherit;outline:none;}
+.card input[type="text"]:focus{border-color:var(--c-primary);box-shadow:0 0 0 3px rgba(59,130,246,.15);}
+.card input[type="checkbox"]{width:auto;margin-top:3px;flex-shrink:0;}
+</style>
+{% endblock %}

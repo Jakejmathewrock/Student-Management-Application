@@ -1,0 +1,57 @@
+{% extends 'base_portal.html' %}
+{% block title %}Order #{{ order.pk }}{% endblock %}
+{% block page_title %}Order Confirmation{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'food_court' %}">Food Court</a></li>
+<li class="breadcrumb-item active">Order #{{ order.pk }}</li>
+{% endblock %}
+
+{% block content %}
+<div style="max-width:560px;margin:0 auto;">
+  <div class="card" style="overflow:hidden;">
+    <div style="height:4px;background:linear-gradient(90deg,#F59E0B,#D97706);"></div>
+    <div style="padding:24px;text-align:center;">
+      <div style="font-size:48px;margin-bottom:8px;">✅</div>
+      <h4 style="font-size:20px;font-weight:800;margin-bottom:4px;">Order Placed Successfully!</h4>
+      <p style="font-size:13px;color:var(--text-500);">Order #{{ order.pk }} · {{ order.ordered_at|date:"M d, Y H:i" }}</p>
+    </div>
+
+    <div style="padding:0 24px 20px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+        <span style="color:var(--text-500);font-size:13px;">Payment</span>
+        <span class="badge badge-active">{{ order.get_payment_status_display }}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+        <span style="color:var(--text-500);font-size:13px;">Order Status</span>
+        <span class="badge badge-pending">{{ order.get_order_status_display }}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+        <span style="color:var(--text-500);font-size:13px;">Amount Paid</span>
+        <span style="font-weight:800;color:var(--c-success);">₹{{ order.total_amount|floatformat:0 }}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:16px;">
+        <span style="color:var(--text-500);font-size:13px;">Transaction ID</span>
+        <span style="font-family:monospace;font-size:12px;color:var(--c-primary);">{{ order.transaction_id }}</span>
+      </div>
+
+      <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:16px;">
+        <div style="padding:8px 12px;background:var(--bg);font-size:11px;font-weight:600;text-transform:uppercase;color:var(--text-500);">Items</div>
+        {% for item in order.items.all %}
+        <div style="display:flex;justify-content:space-between;padding:10px 12px;font-size:13px;border-top:1px solid var(--border);">
+          <span>{{ item.food_item.emoji }} {{ item.quantity }}× {{ item.food_item.name }}</span>
+          <span style="font-weight:600;">₹{{ item.subtotal|floatformat:0 }}</span>
+        </div>
+        {% endfor %}
+      </div>
+
+      <div style="padding:12px;background:rgba(245,158,11,0.1);border-radius:8px;font-size:13px;color:var(--text-500);margin-bottom:16px;">
+        📍 {{ order.pickup_note }}
+      </div>
+
+      <a href="{% url 'food_court' %}" class="btn btn-primary" style="width:100%;justify-content:center;margin-bottom:8px;">Order More Food</a>
+      <a href="{% url 'food_order_invoice_pdf' order.pk %}" class="btn btn-outline" style="width:100%;justify-content:center;margin-bottom:8px;display:inline-flex;align-items:center;gap:4px;">📄 Download Invoice (PDF)</a>
+      <a href="{% url 'food_my_orders' %}" class="btn btn-secondary" style="width:100%;justify-content:center;">View All Orders</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

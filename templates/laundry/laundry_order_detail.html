@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% block title %}Order {{ order.order_number }}{% endblock %}
+{% block page_title %}Laundry Order{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'laundry_portal' %}">Laundry</a></li>
+<li class="breadcrumb-item"><a href="{% url 'laundry_my_orders' %}">My Orders</a></li>
+<li class="breadcrumb-item active">{{ order.order_number }}</li>
+{% endblock %}
+
+{% block content %}
+<div style="max-width:680px;margin:0 auto;">
+
+  <!-- Status Banner -->
+  <div style="background:{% if order.status == 'delivered' %}linear-gradient(135deg,rgba(34,197,94,0.15),rgba(34,197,94,0.05)){% elif order.status == 'ready' %}linear-gradient(135deg,rgba(59,130,246,0.15),rgba(59,130,246,0.05)){% elif order.status == 'processing' or order.status == 'collected' %}linear-gradient(135deg,rgba(245,158,11,0.15),rgba(245,158,11,0.05)){% elif order.status == 'cancelled' %}linear-gradient(135deg,rgba(239,68,68,0.15),rgba(239,68,68,0.05)){% else %}linear-gradient(135deg,rgba(59,130,246,0.1),rgba(59,130,246,0.03)){% endif %};border-radius:var(--radius-lg);padding:20px 24px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+    <div>
+      <div style="font-size:22px;font-weight:900;color:var(--text-900);font-family:monospace;">{{ order.order_number }}</div>
+      <div style="font-size:13px;color:var(--text-500);margin-top:4px;">Placed on {{ order.ordered_at|date:"l, F d, Y — H:i" }}</div>
+    </div>
+    <span class="badge {% if order.status == 'delivered' %}badge-active{% elif order.status == 'ready' %}badge-primary{% elif order.status == 'processing' or order.status == 'collected' %}badge-pending{% elif order.status == 'cancelled' %}badge-overdue{% else %}badge-inactive{% endif %}" style="font-size:13px;padding:6px 14px;">
+      ● {{ order.get_status_display }}
+    </span>
+  </div>
+
+  <!-- Progress Steps -->
+  {% with steps="placed,collected,processing,ready,delivered" %}
+  <div class="card" style="margin-bottom:16px;padding:20px 24px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;position:relative;">
+      <div style="position:absolute;top:16px;left:10%;right:10%;height:3px;background:var(--border);z-index:0;border-radius:2px;">
+        <div style="height:100%;border-radius:2px;background:var(--c-primary);width:
+          {% if order.status == 'placed' %}0%
+          {% elif order.status == 'collected' %}25%
+          {% elif order.status == 'processing' %}50%
+          {% elif order.status == 'ready' %}75%
+          {% elif order.status == 'delivered' %}100%
+          {% else %}0%{% endif %};transition:width .5s ease;"></div>
+      </div>
+      {% for step, label in order.STATUS_CHOICES %}
+      {% if step != 'cancelled' %}
+      <div style="text-align:center;z-index:1;flex:1;">
+        <div style="width:32px;height:32px;border-radius:50%;margin:0 auto 6px;display:flex;align-items:center;justify-content:center;font-size:14px;border:2px solid;
+          {% if order.status == step %}background:var(--c-primary);border-color:var(--c-primary);color:#fff;
+          {% elif order.status == 'delivered' or order.status == 'ready' and step == 'placed' or order.status == 'ready' and step == 'collected' or order.status == 'ready' and step == 'processing' or order.status == 'processing' and step == 'placed' or order.status == 'processing' and step == 'collected' or order.status == 'collected' and step == 'placed' %}background:var(--c-success);border-color:var(--c-success);color:#fff;
+          {% else %}background:var(--bg);border-color:var(--border);color:var(--text-500);{% endif %}">
+          {% if step == 'placed' %}📝{% elif step == 'collected' %}📦{% elif step == 'processing' %}⚙️{% elif step == 'ready' %}✅{% elif step == 'delivered' %}🏠{% endif %}
+        </div>
+        <div style="font-size:10.5px;color:var(--text-500);">{{ label }}</div>
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+  {% endwith %}
+
+  <!-- Order Items -->
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-header"><span class="card-title">🧺 Items Ordered</span></div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Service</th><th>Category</th><th>Qty</th><th>Unit Price</th><th style="text-align:right;">Subtotal</th></tr></thead>
+        <tbody>
+          {% for item in order.items.all %}
+          <tr>
+            <td>
+              <div style="font-weight:600;color:var(--text-900);">{{ item.service.emoji }} {{ item.service.name }}</div>
+              <div style="font-size:11.5px;color:var(--text-500);">⏱ Ready in {{ item.service.turnaround_hrs }}h</div>
+            </td>
+            <td><span class="badge badge-purple">{{ item.service.get_category_display }}</span></td>
+            <td style="font-weight:700;font-size:14px;">{{ item.quantity }}</td>
+            <td style="color:var(--text-500);">₹{{ item.unit_price }}</td>
+            <td style="text-align:right;font-weight:700;color:var(--c-success);">₹{{ item.subtotal|floatformat:0 }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr style="background:var(--bg);">
+            <td colspan="4" style="text-align:right;font-weight:700;padding:12px 16px;">Total Amount</td>
+            <td style="text-align:right;font-size:18px;font-weight:900;color:var(--c-success);padding:12px 16px;">₹{{ order.total_amount|floatformat:0 }}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- Payment + Delivery Info -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+    <div class="card" style="padding:18px 20px;">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-500);margin-bottom:12px;">💳 Payment Details</div>
+      <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;">
+        <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-500);">Status</span><span class="badge {% if order.payment_status == 'paid' %}badge-active{% else %}badge-overdue{% endif %}">{{ order.get_payment_status_display }}</span></div>
+        <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-500);">Amount Paid</span><span style="font-weight:700;color:var(--c-success);">₹{{ order.paid_amount|floatformat:0 }}</span></div>
+        <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-500);">UPI ID</span><span style="font-family:monospace;font-size:12px;">{{ order.upi_id|default:"—" }}</span></div>
+        <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-500);">Transaction ID</span><span style="font-family:monospace;font-size:11px;color:var(--c-primary);">{{ order.transaction_id|default:"—" }}</span></div>
+        {% if order.paid_at %}<div style="display:flex;justify-content:space-between;"><span style="color:var(--text-500);">Paid At</span><span style="font-size:12px;">{{ order.paid_at|date:"M d, H:i" }}</span></div>{% endif %}
+      </div>
+    </div>
+    <div class="card" style="padding:18px 20px;">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-500);margin-bottom:12px;">📍 Delivery Details</div>
+      <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;">
+        <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-500);">Room</span><span style="font-weight:600;">{{ order.room_number|default:"—" }}</span></div>
+        <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-500);">Pickup Date</span><span>{{ order.pickup_date|date:"M d, Y"|default:"As scheduled" }}</span></div>
+        <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-500);">Delivery Date</span><span>{{ order.delivery_date|date:"M d, Y"|default:"Within 24–48h" }}</span></div>
+        {% if order.special_instructions %}<div><span style="color:var(--text-500);">Note:</span><div style="font-size:12px;margin-top:4px;color:var(--text-700);">{{ order.special_instructions }}</div></div>{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:10px;margin-top:16px;">
+    <a href="{% url 'laundry_my_orders' %}" class="btn btn-secondary" style="flex:1;justify-content:center;">← My Orders</a>
+    <a href="{% url 'laundry_order_receipt_pdf' order.pk %}" class="btn btn-outline" style="flex:1;justify-content:center;display:inline-flex;align-items:center;gap:4px;">📄 Download PDF Receipt</a>
+    <a href="{% url 'laundry_place_order' %}" class="btn btn-primary" style="flex:1;justify-content:center;">+ New Order</a>
+  </div>
+</div>
+{% endblock %}

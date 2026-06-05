@@ -1,0 +1,182 @@
+{% extends 'base_portal.html' %}
+{% block title %}Exam Portal — EduAdmin Pro{% endblock %}
+{% block page_title %}Exam Portal{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+<li class="breadcrumb-item active">Exam Portal</li>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h4>Exam Portal</h4>
+    <p>Apply online for open exams and pay the exam fee via UPI</p>
+  </div>
+  {% if user.is_staff %}
+  <a href="{% url 'exam_list' %}" class="btn btn-outline">⚙ Manage Exams</a>
+  {% endif %}
+</div>
+
+<div style="margin-bottom:24px;">
+  <div style="font-size:12px;font-weight:700;color:var(--text-500);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px;">
+    📝 Open for Online Application
+  </div>
+
+  {% if open_exams %}
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;">
+    {% for exam in open_exams %}
+    <div class="card" style="overflow:hidden;">
+      <div style="height:4px;background:linear-gradient(90deg,#22C55E,#16A34A);"></div>
+      <div style="padding:18px 20px;">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px;">
+          <div style="flex:1;">
+            <div style="font-size:15px;font-weight:700;color:var(--text-900);margin-bottom:4px;">{{ exam.title }}</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <span class="badge badge-primary">{{ exam.get_exam_type_display }}</span>
+              {% if exam.course %}<span class="badge badge-purple">{{ exam.course.code }}</span>{% endif %}
+              <span class="badge badge-active">● Applications Open</span>
+            </div>
+          </div>
+          <div style="text-align:right;flex-shrink:0;">
+            {% if exam.fee_required %}
+            <div style="font-size:22px;font-weight:800;color:var(--c-success);">₹{{ exam.exam_fee|floatformat:0 }}</div>
+            <div style="font-size:10.5px;color:var(--text-500);">Exam Fee</div>
+            {% else %}
+            <div style="font-size:14px;font-weight:700;color:var(--c-primary);">Free</div>
+            <div style="font-size:10.5px;color:var(--text-500);">No fee required</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
+          <div style="padding:8px 10px;background:var(--bg);border-radius:6px;">
+            <div style="font-size:10px;color:var(--text-500);text-transform:uppercase;">Exam Date</div>
+            <div style="font-size:13px;font-weight:600;margin-top:2px;">📅 {{ exam.exam_date|date:"M d, Y" }}</div>
+          </div>
+          <div style="padding:8px 10px;background:var(--bg);border-radius:6px;">
+            <div style="font-size:10px;color:var(--text-500);text-transform:uppercase;">Time</div>
+            <div style="font-size:13px;font-weight:600;margin-top:2px;">🕐 {{ exam.start_time|time:"H:i" }} – {{ exam.end_time|time:"H:i" }}</div>
+          </div>
+          <div style="padding:8px 10px;background:var(--bg);border-radius:6px;">
+            <div style="font-size:10px;color:var(--text-500);text-transform:uppercase;">Apply Until</div>
+            <div style="font-size:12px;color:var(--text-700);margin-top:2px;">{{ exam.apply_end|date:"M d, Y" }}</div>
+          </div>
+          <div style="padding:8px 10px;background:var(--bg);border-radius:6px;">
+            <div style="font-size:10px;color:var(--text-500);text-transform:uppercase;">Seats Left</div>
+            <div style="font-size:13px;font-weight:600;margin-top:2px;">{{ exam.seats_available }} / {{ exam.total_seats }}</div>
+          </div>
+        </div>
+
+        {% if exam.pk in applied_exam_ids %}
+        {% for app in my_applications %}
+          {% if app.exam_id == exam.pk %}
+          <a href="{% url 'exam_application_status' app.pk %}" class="btn btn-secondary" style="width:100%;justify-content:center;font-size:13px;">✓ View Application</a>
+          {% endif %}
+        {% endfor %}
+        {% else %}
+        <a href="{% url 'exam_apply' exam.pk %}" class="btn btn-primary" style="width:100%;justify-content:center;font-size:13px;">
+          Apply Online →
+        </a>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="card">
+    <div class="empty-state" style="padding:48px 20px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      <h6>No exams open for application</h6>
+      <p>Check back later or view upcoming exams below.</p>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+{% if upcoming_exams %}
+<div style="margin-bottom:24px;">
+  <div style="font-size:12px;font-weight:700;color:var(--text-500);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px;">
+    📅 Upcoming Exams
+  </div>
+  <div class="card">
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Exam</th>
+            <th>Type</th>
+            <th>Date</th>
+            <th>Exam Fee</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for exam in upcoming_exams %}
+          <tr>
+            <td style="font-weight:600;">{{ exam.title }}</td>
+            <td><span class="badge badge-primary">{{ exam.get_exam_type_display }}</span></td>
+            <td style="font-size:13px;">{{ exam.exam_date|date:"M d, Y" }}</td>
+            <td style="font-weight:700;color:var(--c-success);">
+              {% if exam.fee_required %}₹{{ exam.exam_fee|floatformat:0 }}{% else %}Free{% endif %}
+            </td>
+            <td><span class="badge badge-primary">{{ exam.get_status_display }}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% if my_applications %}
+<div>
+  <div style="font-size:12px;font-weight:700;color:var(--text-500);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px;">
+    📋 My Applications
+  </div>
+  <div class="card">
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Exam</th>
+            <th>Applied On</th>
+            <th>Fee Paid</th>
+            <th>Payment</th>
+            <th>Status</th>
+            <th style="text-align:right;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for app in my_applications %}
+          <tr>
+            <td style="font-weight:600;">{{ app.exam.title }}</td>
+            <td style="font-size:12px;color:var(--text-500);">{{ app.applied_at|date:"M d, Y H:i" }}</td>
+            <td style="font-weight:700;color:var(--c-success);">
+              {% if app.fee_paid > 0 %}₹{{ app.fee_paid|floatformat:0 }}{% else %}—{% endif %}
+            </td>
+            <td>
+              <span class="badge {% if app.payment_status == 'paid' %}badge-active{% elif app.payment_status == 'waived' %}badge-pending{% else %}badge-overdue{% endif %}">
+                {{ app.get_payment_status_display }}
+              </span>
+            </td>
+            <td>
+              <span class="badge {% if app.status == 'approved' %}badge-active{% elif app.status == 'pending' %}badge-pending{% elif app.status == 'rejected' %}badge-overdue{% else %}badge-inactive{% endif %}">
+                {{ app.get_status_display }}
+              </span>
+            </td>
+            <td style="text-align:right;">
+              <a href="{% url 'exam_application_status' app.pk %}" class="btn btn-sm btn-outline">View</a>
+              {% if app.status == 'approved' and app.hall_ticket_no %}
+              <a href="{% url 'hall_ticket' app.pk %}" class="btn btn-sm btn-primary" target="_blank">🎫 Ticket</a>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

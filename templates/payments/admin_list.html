@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block title %}Payment Management — Admin{% endblock %}
+{% block page_title %}Payment Management{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+<li class="breadcrumb-item active">Payments Admin</li>
+{% endblock %}
+{% block content %}
+
+<!-- KPI Cards -->
+<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px;">
+  <div class="kpi-card" style="--kpi-color:#3B82F6;--kpi-bg:rgba(59,130,246,0.1);padding:14px 16px;">
+    <div class="kpi-value" style="font-size:24px;">{{ stats.total }}</div><div class="kpi-label">Total</div>
+  </div>
+  <div class="kpi-card" style="--kpi-color:#F59E0B;--kpi-bg:rgba(245,158,11,0.1);padding:14px 16px;">
+    <div class="kpi-value" style="font-size:24px;color:var(--c-warning);">{{ stats.pending }}</div><div class="kpi-label">Pending Approval</div>
+  </div>
+  <div class="kpi-card" style="--kpi-color:#22C55E;--kpi-bg:rgba(34,197,94,0.1);padding:14px 16px;">
+    <div class="kpi-value" style="font-size:24px;color:var(--c-success);">{{ stats.completed }}</div><div class="kpi-label">Completed</div>
+  </div>
+  <div class="kpi-card" style="--kpi-color:#EF4444;--kpi-bg:rgba(239,68,68,0.1);padding:14px 16px;">
+    <div class="kpi-value" style="font-size:24px;color:var(--c-danger);">{{ stats.failed }}</div><div class="kpi-label">Failed</div>
+  </div>
+  <div class="kpi-card" style="--kpi-color:#22C55E;--kpi-bg:rgba(34,197,94,0.1);padding:14px 16px;">
+    <div class="kpi-value" style="font-size:22px;color:var(--c-success);">₹{{ stats.revenue|floatformat:0 }}</div><div class="kpi-label">Revenue</div>
+  </div>
+</div>
+
+<!-- Filter Tabs -->
+<div class="page-header" style="margin-bottom:12px;">
+  <div><h4>All Transactions</h4></div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;">
+    <a href="{% url 'payment_admin_list' %}" class="btn btn-sm {% if not status_filter %}btn-primary{% else %}btn-outline{% endif %}">All</a>
+    <a href="?status=pending"   class="btn btn-sm {% if status_filter == 'pending' %}btn-primary{% else %}btn-outline{% endif %}">⏳ Pending</a>
+    <a href="?status=completed" class="btn btn-sm {% if status_filter == 'completed' %}btn-primary{% else %}btn-outline{% endif %}">✅ Completed</a>
+    <a href="?status=failed"    class="btn btn-sm {% if status_filter == 'failed' %}btn-primary{% else %}btn-outline{% endif %}">❌ Failed</a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr><th>Student</th><th>Amount</th><th>Method</th><th>Ref / ID</th><th>Submitted</th><th>Status</th><th>Approved By</th><th style="text-align:right;">Action</th></tr>
+      </thead>
+      <tbody>
+        {% for txn in txns %}
+        <tr>
+          <td>
+            <div class="cell-user">
+              <div class="cell-avatar-placeholder">{{ txn.fee_record.student.full_name|first|upper }}</div>
+              <div>
+                <div class="cell-name">{{ txn.fee_record.student.full_name }}</div>
+                <div class="cell-sub">{{ txn.fee_record.student.roll_number }}</div>
+              </div>
+            </div>
+          </td>
+          <td style="font-size:15px;font-weight:800;color:{% if txn.status == 'completed' %}var(--c-success){% elif txn.status == 'failed' %}var(--c-danger){% else %}var(--c-warning){% endif %};">
+            ₹{{ txn.amount|floatformat:0 }}
+          </td>
+          <td><span class="badge badge-primary">{{ txn.get_method_display }}</span></td>
+          <td style="font-family:monospace;font-size:11.5px;color:var(--c-primary);">
+            {{ txn.transaction_ref|default:txn.razorpay_payment_id|default:"—"|truncatechars:20 }}
+          </td>
+          <td style="font-size:12px;color:var(--text-500);">{{ txn.created_at|date:"M d, Y H:i" }}</td>
+          <td>
+            <span class="badge {% if txn.status == 'completed' %}badge-active{% elif txn.status == 'pending' %}badge-pending{% elif txn.status == 'failed' %}badge-overdue{% else %}badge-inactive{% endif %}">
+              ● {{ txn.get_status_display }}
+            </span>
+          </td>
+          <td style="font-size:12px;color:var(--text-500);">
+            {% if txn.approved_by %}{{ txn.approved_by.username }}<br/><span style="font-size:10.5px;">{{ txn.approved_at|date:"M d, H:i" }}</span>{% else %}—{% endif %}
+          </td>
+          <td>
+            <div class="row-actions">
+              {% if txn.status == 'pending' %}
+              <a href="{% url 'payment_admin_approve' txn.pk %}" class="btn btn-sm btn-primary" style="font-size:11.5px;padding:4px 10px;">⚡ Review</a>
+              {% elif txn.status == 'completed' %}
+              <a href="{% url 'payment_receipt_pdf' txn.pk %}" class="btn btn-sm btn-outline" style="font-size:11px;">⬇ Receipt</a>
+              {% else %}—{% endif %}
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8"><div class="empty-state"><h6>No transactions</h6></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

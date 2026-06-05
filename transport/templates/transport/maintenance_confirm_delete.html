@@ -1,0 +1,11 @@
+{% extends 'base.html' %}{% block title %}Delete Maintenance Record{% endblock %}{% block content %}
+<div style="max-width:440px;margin:0 auto;"><div class="card" style="text-align:center;padding:36px 28px;">
+  <div style="width:56px;height:56px;border-radius:50%;background:rgba(239,68,68,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;"><svg viewBox="0 0 24 24" fill="none" stroke="var(--c-danger)" stroke-width="2" width="26" height="26"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6m5 0V4h4v2"/></svg></div>
+  <h3 style="font-size:17px;font-weight:700;margin-bottom:8px;">Delete Maintenance Record?</h3>
+  <p style="font-size:13.5px;color:var(--text-500);margin-bottom:24px;">Delete <strong style="color:var(--text-900);">{{ record.get_maintenance_type_display }}</strong> for <strong style="color:var(--text-900);">{{ record.vehicle.vehicle_number }}</strong>? This cannot be undone.</p>
+  <form method="POST" style="display:flex;gap:10px;justify-content:center;">{% csrf_token %}
+    <a href="{% url 'maintenance_list' %}" class="btn btn-secondary">Cancel</a>
+    <button type="submit" class="btn btn-danger">Delete</button>
+  </form>
+</div></div>
+{% endblock %}

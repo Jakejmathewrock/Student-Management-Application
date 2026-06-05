@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% block title %}Exams — EduAdmin Pro{% endblock %}
+{% block page_title %}Exam Management{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+<li class="breadcrumb-item active">Exams</li>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h4>Exams</h4>
+    <p>{{ exams|length }} exam{{ exams|length|pluralize }} scheduled</p>
+  </div>
+  <div style="display:flex;gap:8px;">
+    <a href="{% url 'exam_portal' %}" class="btn btn-outline">🎓 Student Portal</a>
+    <a href="{% url 'exam_create' %}" class="btn btn-primary">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Create Exam
+    </a>
+  </div>
+</div>
+
+{% if exams %}
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;">
+  {% for exam in exams %}
+  <div class="card" style="overflow:hidden;transition:all .2s;">
+    <!-- Color top bar by type -->
+    <div style="height:4px;background:
+      {% if exam.status == 'open' %}linear-gradient(90deg,#22C55E,#16A34A)
+      {% elif exam.status == 'upcoming' %}linear-gradient(90deg,#3B82F6,#1D4ED8)
+      {% elif exam.status == 'completed' %}linear-gradient(90deg,#6B7280,#4B5563)
+      {% elif exam.status == 'ongoing' %}linear-gradient(90deg,#F59E0B,#D97706)
+      {% else %}linear-gradient(90deg,#EF4444,#DC2626)
+      {% endif %};"></div>
+
+    <div style="padding:18px 20px;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px;">
+        <div style="flex:1;">
+          <div style="font-size:15px;font-weight:700;color:var(--text-900);margin-bottom:4px;">{{ exam.title }}</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <span class="badge badge-primary">{{ exam.get_exam_type_display }}</span>
+            {% if exam.course %}<span class="badge badge-purple">{{ exam.course.code }}</span>{% endif %}
+            <span class="badge {% if exam.status == 'open' %}badge-active{% elif exam.status == 'upcoming' %}badge-primary{% elif exam.status == 'completed' %}badge-inactive{% elif exam.status == 'ongoing' %}badge-pending{% else %}badge-overdue{% endif %}">
+              ● {{ exam.get_status_display }}
+            </span>
+          </div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          <div style="font-size:22px;font-weight:800;color:var(--c-success);">₹{{ exam.exam_fee|floatformat:0 }}</div>
+          <div style="font-size:10.5px;color:var(--text-500);">Exam Fee</div>
+        </div>
+      </div>
+
+      <!-- Date / Time / Venue row -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+        <div style="padding:8px 10px;background:var(--bg);border-radius:6px;">
+          <div style="font-size:10px;color:var(--text-500);text-transform:uppercase;letter-spacing:.5px;">Exam Date</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text-900);margin-top:2px;">📅 {{ exam.exam_date|date:"M d, Y" }}</div>
+        </div>
+        <div style="padding:8px 10px;background:var(--bg);border-radius:6px;">
+          <div style="font-size:10px;color:var(--text-500);text-transform:uppercase;letter-spacing:.5px;">Time</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text-900);margin-top:2px;">🕐 {{ exam.start_time|time:"H:i" }} – {{ exam.end_time|time:"H:i" }}</div>
+        </div>
+        <div style="padding:8px 10px;background:var(--bg);border-radius:6px;">
+          <div style="font-size:10px;color:var(--text-500);text-transform:uppercase;letter-spacing:.5px;">Apply Window</div>
+          <div style="font-size:12px;color:var(--text-700);margin-top:2px;">{{ exam.apply_start|date:"M d" }} → {{ exam.apply_end|date:"M d, Y" }}</div>
+        </div>
+        <div style="padding:8px 10px;background:var(--bg);border-radius:6px;">
+          <div style="font-size:10px;color:var(--text-500);text-transform:uppercase;letter-spacing:.5px;">Venue</div>
+          <div style="font-size:12px;color:var(--text-700);margin-top:2px;">📍 {{ exam.venue|default:"TBA" }}</div>
+        </div>
+      </div>
+
+      <!-- Stats row -->
+      <div style="display:flex;gap:16px;padding:10px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-bottom:12px;">
+        <div style="text-align:center;flex:1;">
+          <div style="font-size:18px;font-weight:700;color:var(--c-primary);">{{ exam.applicant_count }}</div>
+          <div style="font-size:10.5px;color:var(--text-500);">Applied</div>
+        </div>
+        <div style="text-align:center;flex:1;">
+          <div style="font-size:18px;font-weight:700;color:var(--c-success);">{{ exam.approved_count }}</div>
+          <div style="font-size:10.5px;color:var(--text-500);">Approved</div>
+        </div>
+        <div style="text-align:center;flex:1;">
+          <div style="font-size:18px;font-weight:700;color:var(--c-warning);">{{ exam.total_seats }}</div>
+          <div style="font-size:10.5px;color:var(--text-500);">Seats</div>
+        </div>
+        <div style="text-align:center;flex:1;">
+          <div style="font-size:18px;font-weight:700;color:var(--c-success);">₹{{ exam.fee_total|floatformat:0 }}</div>
+          <div style="font-size:10.5px;color:var(--text-500);">Collected</div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div style="display:flex;gap:8px;">
+        <a href="{% url 'exam_detail' exam.pk %}" class="btn btn-primary" style="flex:1;justify-content:center;font-size:12.5px;">👁 View Applications</a>
+        <a href="{% url 'exam_edit' exam.pk %}" class="btn btn-outline" style="font-size:12.5px;">✏ Edit</a>
+        <a href="{% url 'exam_delete' exam.pk %}" class="btn btn-outline" style="color:var(--c-danger);font-size:12.5px;"
+           data-confirm-href="{% url 'exam_delete' exam.pk %}"
+           data-confirm-message="Delete exam: {{ exam.title }}?">🗑</a>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card">
+  <div class="empty-state" style="padding:60px 20px;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="52" height="52"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+    <h6>No exams created yet</h6>
+    <p style="margin-bottom:16px;">Create your first exam to let students apply online.</p>
+    <a href="{% url 'exam_create' %}" class="btn btn-primary">+ Create First Exam</a>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

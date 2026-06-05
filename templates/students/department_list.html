@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block title %}Departments — EduAdmin Pro{% endblock %}
+{% block page_title %}Departments{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+<li class="breadcrumb-item active">Departments</li>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div><h4>Departments</h4><p>{{ departments|length }} department{{ departments|length|pluralize }}</p></div>
+  <a href="{% url 'department_add' %}" class="btn btn-primary">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Add Department
+  </a>
+</div>
+
+<div class="dept-cards">
+  {% for dept in departments %}
+  <div class="dept-card">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;">
+      <div style="width:40px;height:40px;border-radius:10px;background:var(--c-primary-s);display:flex;align-items:center;justify-content:center;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--c-primary)" stroke-width="2" width="20" height="20"><path d="M3 21h18M3 7v1a3 3 0 006 0V7m0 1a3 3 0 006 0V7m0 1a3 3 0 006 0V7M4 7l8-4 8 4M9 21V9h6v12"/></svg>
+      </div>
+      <div class="row-actions">
+        <a href="{% url 'department_edit' dept.pk %}" class="row-btn" title="Edit">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </a>
+        <a href="{% url 'department_delete' dept.pk %}" class="row-btn danger" title="Delete"
+           data-confirm-href="{% url 'department_delete' dept.pk %}"
+           data-confirm-message="Delete department {{ dept.name }}?">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6m5 0V4h4v2"/></svg>
+        </a>
+      </div>
+    </div>
+    <div style="font-size:15px;font-weight:700;color:var(--text-900);margin-bottom:2px;">{{ dept.name }}</div>
+    <span class="badge badge-primary" style="margin-bottom:8px;">{{ dept.code }}</span>
+    <p style="font-size:12.5px;color:var(--text-500);margin:8px 0;">{{ dept.description|default:"No description provided."|truncatechars:80 }}</p>
+    <div style="display:flex;gap:16px;font-size:12.5px;color:var(--text-500);border-top:1px solid var(--border);padding-top:10px;margin-top:8px;">
+      <span>👥 {{ dept.student_count }} students</span>
+      {% if dept.head %}<span>🎓 {{ dept.head }}</span>{% endif %}
+    </div>
+  </div>
+  {% empty %}
+  <div style="grid-column:1/-1;">
+    <div class="card">
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 21h18M3 7v1a3 3 0 006 0V7"/></svg>
+        <h6>No departments</h6>
+        <p><a href="{% url 'department_add' %}">Create the first department</a></p>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

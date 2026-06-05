@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% block title %}Vehicles — EduAdmin Pro{% endblock %}
+{% block page_title %}Vehicles{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'transport_dashboard' %}">Transport</a></li>
+<li class="breadcrumb-item active">Vehicles</li>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h4>Fleet Vehicles</h4><p>{{ vehicles|length }} vehicle{{ vehicles|length|pluralize }}</p></div>
+  <a href="{% url 'vehicle_add' %}" class="btn btn-primary">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Add Vehicle
+  </a>
+</div>
+<div class="card" style="margin-bottom:16px;padding:16px;">
+  <form method="GET" style="display:flex;flex-wrap:wrap;gap:12px;align-items:end;margin:0;">
+    <div style="flex:1;min-width:200px;">
+      <label class="field-label" style="font-size:12px;font-weight:600;margin-bottom:4px;display:block;">Search Vehicle</label>
+      <input type="text" name="query" value="{{ query|default:'' }}" placeholder="Registration number, model, make..." style="width:100%;height:36px;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;background:inherit;color:inherit;"/>
+    </div>
+    <div style="min-width:140px;">
+      <label class="field-label" style="font-size:12px;font-weight:600;margin-bottom:4px;display:block;">Route</label>
+      <select name="route" style="width:100%;height:36px;padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;background:inherit;color:inherit;">
+        <option value="">All Routes</option>
+        {% for r in routes %}
+        <option value="{{ r.pk }}" {% if selected_route == r.pk|stringformat:"i" %}selected{% endif %}>{{ r.route_number }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div style="min-width:140px;">
+      <label class="field-label" style="font-size:12px;font-weight:600;margin-bottom:4px;display:block;">Status</label>
+      <select name="status" style="width:100%;height:36px;padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;background:inherit;color:inherit;">
+        <option value="">All Statuses</option>
+        <option value="active" {% if selected_status == 'active' %}selected{% endif %}>Active</option>
+        <option value="maintenance" {% if selected_status == 'maintenance' %}selected{% endif %}>Under Maintenance</option>
+        <option value="breakdown" {% if selected_status == 'breakdown' %}selected{% endif %}>Breakdown</option>
+        <option value="inactive" {% if selected_status == 'inactive' %}selected{% endif %}>Inactive</option>
+      </select>
+    </div>
+    <div>
+      <button type="submit" class="btn btn-primary" style="height:36px;padding:0 16px;">Search</button>
+    </div>
+    <div>
+      <a href="{% url 'vehicle_list' %}" class="btn btn-outline" style="height:36px;padding:0 16px;display:inline-flex;align-items:center;">Reset</a>
+    </div>
+  </form>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;">
+  {% for v in vehicles %}
+  <div class="card" style="overflow:hidden;">
+    <div style="height:4px;background:{% if v.status == 'active' %}linear-gradient(90deg,#22C55E,#16A34A){% elif v.status == 'maintenance' %}linear-gradient(90deg,#F59E0B,#D97706){% elif v.status == 'breakdown' %}linear-gradient(90deg,#EF4444,#DC2626){% else %}linear-gradient(90deg,#6B7280,#4B5563){% endif %};"></div>
+    <div style="padding:18px 20px;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;">
+        <div>
+          <div style="font-family:monospace;font-size:16px;font-weight:800;color:var(--c-primary);">{{ v.vehicle_number }}</div>
+          <div style="font-size:14px;font-weight:600;color:var(--text-900);">{{ v.make_model }}</div>
+          <div style="display:flex;gap:6px;margin-top:6px;">
+            <span class="badge badge-purple">{{ v.get_vehicle_type_display }}</span>
+            <span class="badge {% if v.status == 'active' %}badge-active{% elif v.status == 'maintenance' %}badge-pending{% elif v.status == 'breakdown' %}badge-overdue{% else %}badge-inactive{% endif %}">● {{ v.get_status_display }}</span>
+          </div>
+        </div>
+        <div class="row-actions">
+          <a href="{% url 'vehicle_detail' v.pk %}" class="row-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></a>
+          <a href="{% url 'vehicle_edit' v.pk %}" class="row-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></a>
+          <a href="{% url 'vehicle_delete' v.pk %}" class="row-btn danger" data-confirm-href="{% url 'vehicle_delete' v.pk %}" data-confirm-message="Delete vehicle {{ v.vehicle_number }}?"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6m5 0V4h4v2"/></svg></a>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12.5px;">
+        <div style="padding:8px 10px;background:var(--bg);border-radius:6px;">
+          <div style="color:var(--text-500);font-size:10.5px;text-transform:uppercase;">Capacity</div>
+          <div style="font-weight:600;color:var(--text-900);margin-top:2px;">🪑 {{ v.seating_capacity }} seats</div>
+        </div>
+        <div style="padding:8px 10px;background:var(--bg);border-radius:6px;">
+          <div style="color:var(--text-500);font-size:10.5px;text-transform:uppercase;">Fuel</div>
+          <div style="font-weight:600;color:var(--text-900);margin-top:2px;">⛽ {{ v.get_fuel_type_display }}</div>
+        </div>
+        <div style="padding:8px 10px;background:var(--bg);border-radius:6px;">
+          <div style="color:var(--text-500);font-size:10.5px;text-transform:uppercase;">Route</div>
+          <div style="font-weight:600;color:var(--c-primary);margin-top:2px;">{{ v.current_route.route_number|default:"Unassigned" }}</div>
+        </div>
+        <div style="padding:8px 10px;background:var(--bg);border-radius:6px;">
+          <div style="color:var(--text-500);font-size:10.5px;text-transform:uppercase;">Driver</div>
+          <div style="font-weight:600;color:var(--text-900);margin-top:2px;">{{ v.assigned_driver.full_name|default:"None"|truncatechars:14 }}</div>
+        </div>
+      </div>
+      <!-- Expiry warnings -->
+      <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;">
+        {% if v.insurance_expiry %}<span class="badge {% if v.is_insurance_valid %}badge-active{% else %}badge-overdue{% endif %}">🛡 Insurance: {{ v.insurance_expiry|date:"M Y" }}</span>{% endif %}
+        {% if v.fitness_expiry %}<span class="badge {% if v.is_fitness_valid %}badge-primary{% else %}badge-overdue{% endif %}">✅ Fitness: {{ v.fitness_expiry|date:"M Y" }}</span>{% endif %}
+        {% if v.gps_enabled %}<span class="badge badge-cyan" style="background:rgba(6,182,212,0.12);color:#06B6D4;">📡 GPS On</span>{% endif %}
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <div style="grid-column:1/-1;"><div class="card"><div class="empty-state" style="padding:56px;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/></svg>
+    <h6>No vehicles yet</h6><p><a href="{% url 'vehicle_add' %}">Add the first vehicle</a></p>
+  </div></div></div>
+  {% endfor %}
+</div>
+{% endblock %}

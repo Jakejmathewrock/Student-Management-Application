@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% block title %}Transport Fees{% endblock %}
+{% block page_title %}Transport Fees{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'transport_dashboard' %}">Transport</a></li>
+<li class="breadcrumb-item active">Fees</li>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h4>Transport Fees</h4><p>{{ fees|length }} record{{ fees|length|pluralize }}</p></div>
+  <div style="display:flex;gap:8px;">
+    <a href="{% url 'transport_fee_export_pdf' %}" class="btn btn-primary">📄 Export PDF Report</a>
+    <a href="{% url 'transport_fee_add' %}" class="btn btn-primary">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add Fee Record
+    </a>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom:16px;padding:16px;">
+  <form method="GET" style="display:flex;flex-wrap:wrap;gap:12px;align-items:end;margin:0;">
+    <div style="flex:1;min-width:200px;">
+      <label class="field-label" style="font-size:12px;font-weight:600;margin-bottom:4px;display:block;">Search Student</label>
+      <input type="text" name="query" value="{{ query|default:'' }}" placeholder="Student name or roll number..." style="width:100%;height:36px;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;background:inherit;color:inherit;"/>
+    </div>
+    <div style="min-width:140px;">
+      <label class="field-label" style="font-size:12px;font-weight:600;margin-bottom:4px;display:block;">Route</label>
+      <select name="route" style="width:100%;height:36px;padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;background:inherit;color:inherit;">
+        <option value="">All Routes</option>
+        {% for r in routes %}
+        <option value="{{ r.pk }}" {% if selected_route == r.pk|stringformat:"i" %}selected{% endif %}>{{ r.route_number }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div style="min-width:140px;">
+      <label class="field-label" style="font-size:12px;font-weight:600;margin-bottom:4px;display:block;">Status</label>
+      <select name="status" style="width:100%;height:36px;padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;background:inherit;color:inherit;">
+        <option value="">All Statuses</option>
+        <option value="paid" {% if selected_status == 'paid' %}selected{% endif %}>Paid</option>
+        <option value="pending" {% if selected_status == 'pending' %}selected{% endif %}>Pending</option>
+        <option value="partial" {% if selected_status == 'partial' %}selected{% endif %}>Partial</option>
+        <option value="overdue" {% if selected_status == 'overdue' %}selected{% endif %}>Overdue</option>
+      </select>
+    </div>
+    <div>
+      <button type="submit" class="btn btn-primary" style="height:36px;padding:0 16px;">Search</button>
+    </div>
+    <div>
+      <a href="{% url 'transport_fee_list' %}" class="btn btn-outline" style="height:36px;padding:0 16px;display:inline-flex;align-items:center;">Reset</a>
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Student</th>
+          <th>Route</th>
+          <th>Fee Amount</th>
+          <th>Paid</th>
+          <th>Balance</th>
+          <th>Due Date</th>
+          <th>Status</th>
+          <th style="text-align:right;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for fee in fees %}
+        <tr>
+          <td>
+            <div class="cell-user">
+              <div class="cell-avatar-placeholder">{{ fee.student.full_name|first|upper }}</div>
+              <div>
+                <div class="cell-name">{{ fee.student.full_name }}</div>
+                <div class="cell-sub">{{ fee.student.student_id }}</div>
+              </div>
+            </div>
+          </td>
+          <td><span class="badge badge-primary">{{ fee.route.route_number }}</span><div style="font-size:11px;color:var(--text-500);margin-top:2px;">{{ fee.route.route_name|truncatechars:22 }}</div></td>
+          <td style="font-weight:600;">₹{{ fee.fee_amount|floatformat:0 }}</td>
+          <td style="color:var(--c-success);font-weight:600;">₹{{ fee.paid_amount|floatformat:0 }}</td>
+          <td style="color:{% if fee.balance_due > 0 %}var(--c-danger){% else %}var(--c-success){% endif %};font-weight:600;">₹{{ fee.balance_due|floatformat:0 }}</td>
+          <td style="font-size:12px;color:var(--text-500);">{{ fee.due_date|date:"M d, Y" }}</td>
+          <td>
+            <span class="badge {% if fee.status == 'paid' %}badge-active{% elif fee.status == 'partial' %}badge-pending{% elif fee.status == 'overdue' %}badge-overdue{% else %}badge-inactive{% endif %}">
+              ● {{ fee.get_status_display }}
+            </span>
+          </td>
+          <td>
+            <div class="row-actions">
+              <a href="{% url 'transport_fee_detail' fee.pk %}" class="row-btn" title="View"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></a>
+              <a href="{% url 'transport_fee_edit' fee.pk %}" class="row-btn" title="Pay / Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></a>
+              <a href="{% url 'transport_fee_delete' fee.pk %}" class="row-btn danger" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6m5 0V4h4v2"/></svg></a>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8"><div class="empty-state"><h6>No fee records yet</h6><p><a href="{% url 'transport_fee_add' %}">Create the first fee record</a></p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

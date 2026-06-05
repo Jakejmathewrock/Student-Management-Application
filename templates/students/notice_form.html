@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}Post Notice{% endblock %}
+{% block page_title %}Post Notice{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'notice_list' %}">Notices</a></li>
+<li class="breadcrumb-item active">Post</li>
+{% endblock %}
+{% block content %}
+<div style="max-width:600px;">
+<form method="POST">{% csrf_token %}
+<div class="form-card">
+  <div class="form-card-header">
+    <div class="form-card-icon" style="background:var(--c-orange-s);"><svg viewBox="0 0 24 24" fill="none" stroke="var(--c-orange)" stroke-width="2"><path d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14"/></svg></div>
+    <div><div style="font-size:15px;font-weight:700;color:var(--text-900);">Post Notice</div><div style="font-size:12.5px;color:var(--text-500);">Broadcast to all students and staff</div></div>
+  </div>
+  <div class="form-section">
+    <div class="form-grid">
+      <div class="form-full"><label class="field-label required">Notice Title</label>{{ form.title }}{% if form.title.errors %}<div class="field-error">{{ form.title.errors.0 }}</div>{% endif %}</div>
+      <div><label class="field-label">Notice Type</label>{{ form.notice_type }}</div>
+      <div class="form-full"><label class="field-label required">Content</label>{{ form.content }}</div>
+    </div>
+  </div>
+  <div class="form-footer">
+    <a href="{% url 'notice_list' %}" class="btn btn-secondary">Cancel</a>
+    <button type="submit" class="btn btn-primary">📢 Post Notice</button>
+  </div>
+</div>
+</form>
+</div>
+{% endblock %}
+{% block extra_css %}<style>.form-card input,.form-card select,.form-card textarea{width:100%;padding:8px 11px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-900);font-size:13px;font-family:inherit;outline:none;transition:var(--transition);}.form-card input:focus,.form-card select:focus,.form-card textarea:focus{border-color:var(--c-primary);box-shadow:0 0 0 3px rgba(59,130,246,.15);}.form-card textarea{min-height:120px;resize:vertical;}</style>{% endblock %}

@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}Fee — {{ fee.student.full_name }}{% endblock %}
+{% block page_title %}Transport Fee Detail{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'transport_dashboard' %}">Transport</a></li>
+<li class="breadcrumb-item"><a href="{% url 'transport_fee_list' %}">Fees</a></li>
+<li class="breadcrumb-item active">{{ fee.student.full_name }}</li>
+{% endblock %}
+{% block content %}
+<div style="max-width:760px;">
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">💳 Transport Fee Record</span>
+    <div style="display:flex;gap:8px;">
+      <a href="{% url 'transport_fee_receipt_pdf' fee.pk %}" class="btn btn-sm btn-outline">📄 Download PDF Receipt</a>
+      <a href="{% url 'transport_fee_edit' fee.pk %}" class="btn btn-sm btn-primary">Edit / Pay</a>
+      <a href="{% url 'transport_fee_delete' fee.pk %}" class="btn btn-sm btn-outline" style="color:var(--c-danger);">Delete</a>
+    </div>
+  </div>
+  <div class="card-body">
+    <div class="info-row">
+      <div class="info-item"><div class="info-label">Student</div><div class="info-value">{{ fee.student.full_name }} <span style="color:var(--text-500);font-size:12px;">({{ fee.student.student_id }})</span></div></div>
+      <div class="info-item"><div class="info-label">Route</div><div class="info-value"><span class="badge badge-primary">{{ fee.route.route_number }}</span> {{ fee.route.route_name }}</div></div>
+      <div class="info-item"><div class="info-label">Academic Year</div><div class="info-value">{{ fee.academic_year }}</div></div>
+      <div class="info-item"><div class="info-label">Semester</div><div class="info-value">{{ fee.get_semester_display }}</div></div>
+      <div class="info-item"><div class="info-label">Fee Amount</div><div class="info-value" style="font-size:18px;font-weight:700;color:var(--text-900);">₹{{ fee.fee_amount|floatformat:0 }}</div></div>
+      <div class="info-item"><div class="info-label">Discount</div><div class="info-value">₹{{ fee.discount|floatformat:0 }}</div></div>
+      <div class="info-item"><div class="info-label">Paid Amount</div><div class="info-value" style="color:var(--c-success);font-weight:600;">₹{{ fee.paid_amount|floatformat:0 }}</div></div>
+      <div class="info-item"><div class="info-label">Balance Due</div><div class="info-value" style="color:{% if fee.balance_due > 0 %}var(--c-danger){% else %}var(--c-success){% endif %};font-weight:700;">₹{{ fee.balance_due|floatformat:0 }}</div></div>
+      <div class="info-item"><div class="info-label">Status</div><div class="info-value"><span class="badge {% if fee.status == 'paid' %}badge-active{% elif fee.status == 'partial' %}badge-pending{% elif fee.status == 'overdue' %}badge-overdue{% else %}badge-inactive{% endif %}">● {{ fee.get_status_display }}</span></div></div>
+      <div class="info-item"><div class="info-label">Due Date</div><div class="info-value">{{ fee.due_date|date:"M d, Y" }}</div></div>
+      {% if fee.paid_date %}<div class="info-item"><div class="info-label">Paid Date</div><div class="info-value">{{ fee.paid_date|date:"M d, Y" }}</div></div>{% endif %}
+      {% if fee.payment_method %}<div class="info-item"><div class="info-label">Payment Method</div><div class="info-value">{{ fee.get_payment_method_display }}</div></div>{% endif %}
+      {% if fee.transaction_id %}<div class="info-item"><div class="info-label">Transaction ID</div><div class="info-value" style="font-family:monospace;color:var(--c-primary);">{{ fee.transaction_id }}</div></div>{% endif %}
+      {% if fee.remarks %}<div class="info-item" style="grid-column:1/-1;"><div class="info-label">Remarks</div><div class="info-value">{{ fee.remarks }}</div></div>{% endif %}
+    </div>
+  </div>
+</div>
+</div>
+{% endblock %}

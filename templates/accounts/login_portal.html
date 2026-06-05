@@ -1,0 +1,77 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign In — EduAdmin Pro</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html,body{min-height:100%;font-family:'Inter',sans-serif;}
+    body{background:#060d1a;display:flex;align-items:center;justify-content:center;padding:32px 20px;}
+    .wrap{max-width:920px;width:100%;}
+    .head{text-align:center;margin-bottom:36px;}
+    .logo{display:inline-flex;align-items:center;gap:12px;margin-bottom:20px;}
+    .logo-box{width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#2563eb,#1d4ed8);display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 4px 24px rgba(37,99,235,0.35);}
+    .head h1{font-size:28px;font-weight:800;color:#e8f0ff;letter-spacing:-0.4px;margin-bottom:8px;}
+    .head p{font-size:14px;color:#4a6fa5;}
+    .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+    .card{
+      background:#0c1628;border:1px solid #1a2a42;border-radius:14px;
+      padding:28px 22px;text-align:center;text-decoration:none;
+      transition:all .2s;color:inherit;display:block;
+    }
+    .card:hover{border-color:#3b82f6;transform:translateY(-3px);box-shadow:0 12px 40px rgba(37,99,235,0.2);}
+    .card-icon{font-size:36px;margin-bottom:14px;}
+    .card h2{font-size:17px;font-weight:700;color:#e8f0ff;margin-bottom:8px;}
+    .card p{font-size:12.5px;color:#4a6fa5;line-height:1.55;margin-bottom:16px;}
+    .card-btn{
+      display:inline-block;padding:9px 18px;border-radius:8px;font-size:13px;font-weight:600;
+      background:rgba(59,130,246,0.15);color:#60a5fa;border:1px solid rgba(59,130,246,0.3);
+    }
+    .card.admin:hover .card-btn{background:#2563eb;color:#fff;border-color:#2563eb;}
+    .card.student:hover .card-btn{background:#16a34a;color:#fff;border-color:#16a34a;}
+    .card.parent:hover .card-btn{background:#7c3aed;color:#fff;border-color:#7c3aed;}
+    .card.student{border-color:rgba(34,197,94,0.15);}
+    .card.parent{border-color:rgba(124,58,237,0.15);}
+    @media(max-width:720px){.cards{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="head">
+      <div class="logo">
+        <div class="logo-box">🎓</div>
+        <div style="text-align:left;">
+          <div style="font-size:18px;font-weight:800;color:#e8f0ff;">EduAdmin Pro</div>
+          <div style="font-size:10px;color:#3b5278;text-transform:uppercase;letter-spacing:1px;">Campus Management</div>
+        </div>
+      </div>
+      <h1>Choose how to sign in</h1>
+      <p>Select your portal — admin, student, or parent</p>
+    </div>
+
+    <div class="cards">
+      <a href="{% url 'login_admin' %}" class="card admin">
+        <div class="card-icon">🛡️</div>
+        <h2>Admin Login</h2>
+        <p>Manage students, fees, exams, attendance, and college operations.</p>
+        <span class="card-btn">Admin Portal →</span>
+      </a>
+      <a href="{% url 'login_student' %}" class="card student">
+        <div class="card-icon">👨‍🎓</div>
+        <h2>Student Login</h2>
+        <p>View your dashboard, results, attendance, and apply for exams online.</p>
+        <span class="card-btn">Student Portal →</span>
+      </a>
+      <a href="{% url 'login_parent' %}" class="card parent">
+        <div class="card-icon">👨‍👩‍👧</div>
+        <h2>Parent Login</h2>
+        <p>Track your child's attendance, fees, results, and academic progress.</p>
+        <span class="card-btn">Parent Portal →</span>
+      </a>
+    </div>
+  </div>
+</body>
+</html>

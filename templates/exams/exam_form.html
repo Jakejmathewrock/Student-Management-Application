@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }} — EduAdmin Pro{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'exam_list' %}">Exams</a></li>
+<li class="breadcrumb-item active">{{ title }}</li>
+{% endblock %}
+
+{% block content %}
+<div style="max-width:800px;">
+<form method="POST">{% csrf_token %}
+<div class="form-card">
+  <div class="form-card-header">
+    <div class="form-card-icon" style="background:rgba(59,130,246,0.12);">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" width="20" height="20">
+        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+      </svg>
+    </div>
+    <div>
+      <div style="font-size:16px;font-weight:700;color:var(--text-900);">{{ title }}</div>
+      <div style="font-size:12.5px;color:var(--text-500);">Fill all fields. Exam fee will be shown to students during application.</div>
+    </div>
+  </div>
+
+  <!-- Basic Info -->
+  <div class="form-section">
+    <div class="form-section-title">📋 Basic Information</div>
+    <div class="form-grid">
+      <div class="form-full"><label class="field-label required">Exam Title</label>{{ form.title }}{% if form.title.errors %}<div class="field-error">{{ form.title.errors.0 }}</div>{% endif %}</div>
+      <div><label class="field-label">Exam Type</label>{{ form.exam_type }}</div>
+      <div><label class="field-label">Status</label>{{ form.status }}</div>
+      <div><label class="field-label">Course</label>{{ form.course }}</div>
+      <div><label class="field-label">Department</label>{{ form.department }}</div>
+      <div class="form-full"><label class="field-label">Description</label>{{ form.description }}</div>
+    </div>
+  </div>
+
+  <!-- Schedule -->
+  <div class="form-section">
+    <div class="form-section-title">📅 Schedule</div>
+    <div class="form-grid">
+      <div><label class="field-label required">Exam Date</label>{{ form.exam_date }}</div>
+      <div><label class="field-label required">Start Time</label>{{ form.start_time }}</div>
+      <div><label class="field-label required">End Time</label>{{ form.end_time }}</div>
+      <div><label class="field-label">Duration (minutes)</label>{{ form.duration_mins }}</div>
+      <div><label class="field-label">Venue / Hall</label>{{ form.venue }}</div>
+      <div><label class="field-label">Total Seats</label>{{ form.total_seats }}</div>
+    </div>
+  </div>
+
+  <!-- Application Window -->
+  <div class="form-section">
+    <div class="form-section-title">📝 Online Application Window</div>
+    <div class="form-grid">
+      <div><label class="field-label required">Applications Open From</label>{{ form.apply_start }}</div>
+      <div><label class="field-label required">Applications Close On</label>{{ form.apply_end }}</div>
+    </div>
+  </div>
+
+  <!-- Fee Section — highlighted -->
+  <div class="form-section" style="background:rgba(34,197,94,0.05);border-color:rgba(34,197,94,0.2);">
+    <div class="form-section-title" style="color:var(--c-success);">💳 Exam Fee</div>
+    <div style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:var(--text-500);">
+      ℹ️ The exam fee will be displayed to students on the application page. Students must pay via UPI before their application is submitted.
+    </div>
+    <div class="form-grid">
+      <div>
+        <label class="field-label required">Exam Fee (₹)</label>
+        {{ form.exam_fee }}
+      </div>
+      <div style="display:flex;align-items:flex-end;padding-bottom:2px;">
+        <label style="display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--text-700);cursor:pointer;">
+          {{ form.fee_required }}
+          <span>Fee Required from students</span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  {% if form.errors %}
+  <div style="margin:0 20px 16px;padding:12px;background:var(--c-danger-s);border-radius:8px;font-size:13px;color:var(--c-danger);">
+    {% for field in form %}{% for e in field.errors %}<div>{{ field.label }}: {{ e }}</div>{% endfor %}{% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="form-footer">
+    <a href="{% url 'exam_list' %}" class="btn btn-secondary">Cancel</a>
+    <button type="submit" class="btn btn-primary">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v14a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+      Save Exam
+    </button>
+  </div>
+</div>
+</form>
+</div>
+{% endblock %}
+{% block extra_css %}<style>.form-card input,.form-card select,.form-card textarea{width:100%;padding:8px 11px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-900);font-size:13px;font-family:inherit;outline:none;transition:var(--transition);}.form-card input:focus,.form-card select:focus,.form-card textarea:focus{border-color:var(--c-primary);box-shadow:0 0 0 3px rgba(59,130,246,.15);}.form-card textarea{min-height:72px;resize:vertical;}.form-card input[type=checkbox]{width:auto;}</style>{% endblock %}

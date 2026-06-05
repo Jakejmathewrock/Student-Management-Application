@@ -1,0 +1,240 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign In — EduAdmin Pro</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html,body{height:100%;font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;}
+    body{background:#060d1a;display:flex;min-height:100vh;}
+
+    /* ── Left Panel ── */
+    .left{
+      flex:1;
+      background:linear-gradient(145deg,#050b16 0%,#0a1628 40%,#0d1e35 100%);
+      border-right:1px solid rgba(59,130,246,0.12);
+      display:flex;flex-direction:column;justify-content:center;
+      padding:56px 52px;position:relative;overflow:hidden;
+    }
+    .left::before{
+      content:'';position:absolute;top:-120px;right:-120px;
+      width:400px;height:400px;border-radius:50%;
+      background:radial-gradient(circle,rgba(59,130,246,0.12) 0%,transparent 70%);
+      pointer-events:none;
+    }
+    .left::after{
+      content:'';position:absolute;bottom:-80px;left:-80px;
+      width:300px;height:300px;border-radius:50%;
+      background:radial-gradient(circle,rgba(99,102,241,0.08) 0%,transparent 70%);
+      pointer-events:none;
+    }
+    .logo{display:flex;align-items:center;gap:12px;margin-bottom:52px;}
+    .logo-box{
+      width:44px;height:44px;border-radius:11px;
+      background:linear-gradient(135deg,#2563eb,#1d4ed8);
+      display:flex;align-items:center;justify-content:center;
+      font-size:22px;box-shadow:0 4px 20px rgba(37,99,235,0.4);
+    }
+    .logo-name{font-size:18px;font-weight:800;color:#e8f0ff;letter-spacing:-0.3px;}
+    .logo-sub{font-size:10.5px;color:#3b5278;letter-spacing:1px;text-transform:uppercase;}
+
+    .tagline{font-size:32px;font-weight:800;color:#e8f0ff;line-height:1.2;margin-bottom:14px;letter-spacing:-0.5px;}
+    .tagline span{color:#3b82f6;}
+    .desc{font-size:14px;color:#4a6fa5;line-height:1.7;margin-bottom:40px;max-width:360px;}
+
+    .features{display:flex;flex-direction:column;gap:14px;}
+    .feat{display:flex;align-items:center;gap:14px;}
+    .feat-icon{
+      width:38px;height:38px;border-radius:9px;flex-shrink:0;
+      background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.15);
+      display:flex;align-items:center;justify-content:center;font-size:16px;
+    }
+    .feat-text{font-size:13.5px;color:#6b8db5;}
+
+    /* Stats row */
+    .stats-row{display:flex;gap:24px;margin-top:44px;padding-top:32px;border-top:1px solid rgba(59,130,246,0.1);}
+    .stat-item{text-align:center;}
+    .stat-num{font-size:22px;font-weight:800;color:#3b82f6;}
+    .stat-lbl{font-size:11px;color:#3b5278;margin-top:2px;}
+
+    /* ── Right Panel ── */
+    .right{
+      width:440px;flex-shrink:0;
+      background:#080f1e;
+      display:flex;align-items:center;justify-content:center;
+      padding:48px 44px;
+    }
+    .form-box{width:100%;}
+    .form-title{font-size:24px;font-weight:800;color:#e8f0ff;margin-bottom:6px;letter-spacing:-0.3px;}
+    .form-sub{font-size:13.5px;color:#4a6fa5;margin-bottom:32px;}
+
+    .error-box{
+      background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);
+      border-radius:8px;padding:10px 14px;font-size:12.5px;color:#f87171;margin-bottom:16px;
+    }
+
+    .field{margin-bottom:16px;}
+    .field label{display:block;font-size:12px;font-weight:600;color:#4a6fa5;margin-bottom:6px;letter-spacing:0.3px;text-transform:uppercase;}
+    .input-wrap{position:relative;}
+    .input-wrap .ico{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:14px;pointer-events:none;}
+    .input-wrap input{
+      width:100%;padding:11px 14px 11px 40px;
+      background:#0c1628;border:1px solid #1a2a42;
+      border-radius:9px;color:#e8f0ff;font-size:13.5px;font-family:inherit;
+      outline:none;transition:all .18s;
+    }
+    .input-wrap input:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,0.15);background:#0f1e35;}
+    .input-wrap input::placeholder{color:#2a3f5f;}
+    .eye-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#3b5278;font-size:14px;}
+
+    .remember{display:flex;align-items:center;gap:8px;font-size:12.5px;color:#4a6fa5;margin-bottom:24px;cursor:pointer;}
+    .remember input{accent-color:#3b82f6;width:14px;height:14px;}
+
+    .submit-btn{
+      width:100%;padding:12px;
+      background:linear-gradient(135deg,#2563eb,#1d4ed8);
+      border:none;border-radius:9px;
+      color:#fff;font-size:14.5px;font-weight:700;
+      cursor:pointer;transition:all .18s;font-family:inherit;
+      box-shadow:0 4px 20px rgba(37,99,235,0.4);
+      display:flex;align-items:center;justify-content:center;gap:8px;
+    }
+    .submit-btn:hover{opacity:.92;transform:translateY(-1px);box-shadow:0 6px 28px rgba(37,99,235,0.5);}
+    .submit-btn:active{transform:translateY(0);}
+
+    .register-link{text-align:center;margin-top:20px;font-size:13px;color:#4a6fa5;}
+    .register-link a{color:#3b82f6;font-weight:600;text-decoration:none;}
+    .register-link a:hover{text-decoration:underline;}
+
+    .demo-box{
+      margin-top:20px;padding:12px 16px;
+      background:rgba(59,130,246,0.06);
+      border:1px solid rgba(59,130,246,0.15);
+      border-radius:8px;text-align:center;font-size:12px;color:#4a6fa5;
+    }
+    .demo-box code{
+      background:rgba(59,130,246,0.15);color:#3b82f6;
+      padding:2px 7px;border-radius:4px;font-size:12px;
+    }
+
+    .divider{
+      display:flex;align-items:center;gap:12px;
+      margin:22px 0;font-size:12px;color:#1e3a5f;
+    }
+    .divider::before,.divider::after{content:'';flex:1;height:1px;background:#1a2a42;}
+
+    @media(max-width:768px){
+      body{flex-direction:column;}
+      .left{padding:32px 28px;display:none;}
+      .right{width:100%;padding:36px 28px;}
+    }
+  </style>
+</head>
+<body>
+
+<!-- Left: Branding -->
+<div class="left">
+  <div class="logo">
+    <div class="logo-box">🎓</div>
+    <div>
+      <div class="logo-name">EduAdmin Pro</div>
+      <div class="logo-sub">Campus Management</div>
+    </div>
+  </div>
+
+  <h1 class="tagline">Manage your entire<br/><span>college digitally.</span></h1>
+  <p class="desc">One powerful platform for students, teachers, attendance, fees, and results — beautifully designed for modern institutions.</p>
+
+  <div class="features">
+    <div class="feat">
+      <div class="feat-icon">👨‍🎓</div>
+      <div class="feat-text">Complete student lifecycle — admission to graduation</div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">📊</div>
+      <div class="feat-text">Real-time analytics with GPA and attendance tracking</div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">💳</div>
+      <div class="feat-text">Fee management with UPI payment integration</div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">📢</div>
+      <div class="feat-text">Notice board, timetable, and assignment management</div>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-item"><div class="stat-num">19+</div><div class="stat-lbl">Students</div></div>
+    <div class="stat-item"><div class="stat-num">6</div><div class="stat-lbl">Departments</div></div>
+    <div class="stat-item"><div class="stat-num">7</div><div class="stat-lbl">Teachers</div></div>
+    <div class="stat-item"><div class="stat-num">10</div><div class="stat-lbl">Courses</div></div>
+  </div>
+</div>
+
+<!-- Right: Login Form -->
+<div class="right">
+  <div class="form-box">
+    <div class="form-title">Welcome back 👋</div>
+    <div class="form-sub">Sign in to your admin account to continue</div>
+
+    {% if messages %}
+      {% for message in messages %}
+      <div class="error-box">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <form method="POST">
+      {% csrf_token %}
+
+      <div class="field">
+        <label>Username</label>
+        <div class="input-wrap">
+          <span class="ico">👤</span>
+          <input type="text" name="username" placeholder="Enter your username" required autofocus/>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Password</label>
+        <div class="input-wrap">
+          <span class="ico">🔒</span>
+          <input type="password" name="password" id="pwdInput" placeholder="Enter your password" required/>
+          <button type="button" class="eye-btn" onclick="togglePwd(this)">👁</button>
+        </div>
+      </div>
+
+      <label class="remember">
+        <input type="checkbox" id="remember"/> Remember me
+      </label>
+
+      <button type="submit" class="submit-btn">
+        Sign In <span>→</span>
+      </button>
+    </form>
+
+    <div class="divider">or</div>
+
+    <div class="register-link">
+      New admin account? <a href="{% url 'register' %}">Create one</a>
+    </div>
+
+    <div class="demo-box">
+      <strong style="color:#6b8db5;">Demo Login</strong><br/>
+      Username: <code>admin</code> &nbsp; Password: <code>admin123</code>
+    </div>
+  </div>
+</div>
+
+<script>
+function togglePwd(btn) {
+  const i = document.getElementById('pwdInput');
+  i.type = i.type === 'password' ? 'text' : 'password';
+  btn.textContent = i.type === 'password' ? '👁' : '🙈';
+}
+</script>
+</body>
+</html>

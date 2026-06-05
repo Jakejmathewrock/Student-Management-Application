@@ -1,0 +1,218 @@
+{% extends 'base_portal.html' %}
+{% block title %}Library Portal — EduAdmin{% endblock %}
+{% block page_title %}Student Library Portal{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'student_dashboard' %}">Home</a></li>
+<li class="breadcrumb-item active">Library Portal</li>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h4>Campus Library</h4>
+    <p>Search books in the catalog and track your personal borrow history</p>
+  </div>
+</div>
+
+<!-- Dynamic Fines Alert -->
+{% if outstanding_fine > 0 %}
+<div style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:16px 20px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <div style="width:36px;height:36px;background:rgba(239,68,68,0.1);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--c-danger);">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    </div>
+    <div>
+      <div style="font-weight:700;color:var(--text-900);font-size:14.5px;">Outstanding Fines</div>
+      <div style="font-size:12.5px;color:var(--text-500);">You have overdue books that have incurred library fines. Please return them to settle your balance.</div>
+    </div>
+  </div>
+  <div style="text-align:right;">
+    <div style="font-size:24px;font-weight:900;color:var(--c-danger);">₹{{ outstanding_fine|floatformat:0 }}</div>
+    <div style="font-size:10.5px;color:var(--text-500);text-transform:uppercase;font-weight:600;">Total Unpaid Fine</div>
+  </div>
+</div>
+{% endif %}
+
+<div style="display:grid;grid-template-columns:1fr;gap:24px;">
+
+  <!-- Featured Digital E-Books -->
+  <div>
+    <div style="font-size:12px;font-weight:700;color:var(--text-500);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px;">
+      🌐 Featured Digital E-Books
+    </div>
+    <div class="card" style="background:linear-gradient(135deg,#1E3A8A 0%,#1e293b 100%);padding:20px;display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;border:1px solid rgba(59,130,246,0.3);box-shadow:0 10px 30px rgba(0,0,0,0.15);margin-bottom:8px;">
+      <div style="display:flex;align-items:center;gap:16px;">
+        <div style="font-size:36px;padding:6px 12px;background:rgba(255,255,255,0.06);border-radius:10px;color:#3B82F6;">📘</div>
+        <div>
+          <span class="badge badge-cyan" style="margin-bottom:6px;font-size:10px;">FREE ONLINE E-BOOK</span>
+          <h5 style="font-weight:800;color:#fff;margin:0;font-size:17px;">The C Book</h5>
+          <p style="color:rgba(255,255,255,0.6);font-size:12.5px;margin:4px 0 0;">by Mike Banahan, Declan Brady, and Mark Doran</p>
+        </div>
+      </div>
+      <div>
+        <a href="https://share.google/R4keLwNT9sneueASq" target="_blank" class="btn btn-primary" style="display:inline-flex;align-items:center;gap:8px;font-weight:700;box-shadow:0 4px 14px rgba(37,99,235,0.4);text-decoration:none;">
+          📖 Read E-Book Online
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Books Search Catalog -->
+  <div>
+    <div style="font-size:12px;font-weight:700;color:var(--text-500);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px;">
+      📚 Search Library Catalog
+    </div>
+    
+    <div class="card" style="margin-bottom:16px;padding:16px;">
+      <form method="GET" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+        <div style="flex:2;min-width:240px;">
+          <input type="text" name="query" value="{{ query }}" class="form-control" placeholder="Search by title, author, or ISBN..." />
+        </div>
+        <div style="flex:1;min-width:160px;">
+          <select name="category" class="form-select">
+            <option value="">All Categories</option>
+            {% for cat in categories %}
+            <option value="{{ cat }}" {% if selected_category == cat %}selected{% endif %}>{{ cat }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button type="submit" class="btn btn-primary">Search</button>
+          <a href="{% url 'library_portal' %}" class="btn btn-outline">Clear</a>
+        </div>
+      </form>
+    </div>
+
+    {% if page_obj %}
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;">
+      {% for book in page_obj %}
+      <div class="card" style="padding:16px;display:flex;flex-direction:column;justify-content:space-between;gap:12px;">
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px;">
+            <span class="badge badge-purple" style="font-size:10px;">{{ book.category }}</span>
+            {% if book.available_copies > 0 %}
+            <span class="badge badge-active" style="font-size:10px;">{{ book.available_copies }} In Library</span>
+            {% else %}
+            <span class="badge badge-overdue" style="font-size:10px;">All Borrowed</span>
+            {% endif %}
+          </div>
+          <div style="font-weight:700;color:var(--text-900);font-size:14px;line-height:1.4;">{{ book.title }}</div>
+          <div style="font-size:12px;color:var(--text-500);margin-top:2px;">by {{ book.author }}</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--border);padding-top:10px;font-size:11.5px;color:var(--text-500);">
+          <span>ISBN: {{ book.isbn|default:"—" }}</span>
+          <span style="font-weight:600;color:var(--text-800);">Ref Price: ₹{{ book.price|floatformat:0 }}</span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% if page_obj.has_other_pages %}
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding:8px 0;">
+      <div style="font-size:12px;color:var(--text-500);">
+        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+      </div>
+      <div style="display:flex;gap:6px;">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}&query={{ query }}&category={{ selected_category }}" class="btn btn-sm btn-outline">Prev</a>
+        {% endif %}
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}&query={{ query }}&category={{ selected_category }}" class="btn btn-sm btn-outline">Next</a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="card" style="padding:48px 20px;text-align:center;">
+      <span style="font-size:24px;">🔍</span>
+      <h6 style="margin-top:8px;font-weight:700;">No books match your search</h6>
+      <p style="color:var(--text-500);font-size:13px;margin:4px 0 0;">Try broadening your query or selecting another category.</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Borrow History -->
+  <div>
+    <div style="font-size:12px;font-weight:700;color:var(--text-500);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px;">
+      📋 My Borrow History & Checkouts
+    </div>
+    <div class="card">
+      {% if my_issues %}
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Book Title & Author</th>
+              <th>Borrowed On</th>
+              <th>Due Date</th>
+              <th>Return Date</th>
+              <th>Status</th>
+              <th>Fine Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for issue in my_issues %}
+            <tr {% if issue.is_overdue %}style="background:rgba(239,68,68,0.02);"{% endif %}>
+              <td>
+                <div style="font-weight:700;color:var(--text-900);">{{ issue.book.title }}</div>
+                <div style="font-size:11.5px;color:var(--text-500);">by {{ issue.book.author }}</div>
+              </td>
+              <td style="font-size:12.5px;">{{ issue.issue_date|date:"M d, Y" }}</td>
+              <td style="font-size:12.5px;font-weight:600;">{{ issue.due_date|date:"M d, Y" }}</td>
+              <td style="font-size:12.5px;color:var(--text-500);">
+                {% if issue.return_date %}{{ issue.return_date|date:"M d, Y" }}{% else %}—{% endif %}
+              </td>
+              <td>
+                {% if issue.status == 'returned' %}
+                <span class="badge badge-active">Returned</span>
+                {% elif issue.is_overdue %}
+                <span class="badge badge-overdue">Overdue</span>
+                {% else %}
+                <span class="badge badge-pending">Borrowed</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if issue.current_fine > 0 %}
+                <div style="font-weight:700;color:var(--c-danger);">₹{{ issue.current_fine|floatformat:0 }}</div>
+                {% if issue.fine_paid %}
+                <span class="badge badge-active" style="font-size:9.5px;">Settled</span>
+                {% else %}
+                <span class="badge badge-overdue" style="font-size:9.5px;">Unpaid</span>
+                {% endif %}
+                {% else %}
+                <span style="color:var(--text-400);font-size:12.5px;">None</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div style="padding:48px 20px;text-align:center;color:var(--text-500);">
+        <span style="font-size:24px;">📖</span>
+        <h6 style="margin-top:8px;font-weight:700;color:var(--text-800);">No borrowing history</h6>
+        <p style="font-size:13px;margin-top:4px;">You have not borrowed any library books yet.</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.form-control, .form-select {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-900);
+  font-size: 13px;
+}
+.form-control:focus, .form-select:focus {
+  border-color: var(--c-primary);
+  box-shadow: 0 0 0 3px rgba(59,130,246,.15);
+}
+</style>
+{% endblock %}

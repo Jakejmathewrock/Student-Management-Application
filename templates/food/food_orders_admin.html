@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% block title %}Food Orders — Admin{% endblock %}
+{% block page_title %}Food Court Orders{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+<li class="breadcrumb-item active">Food Orders</li>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div><h4>📦 Food Court Orders</h4></div>
+  <div style="display:flex;gap:8px;">
+    <a href="{% url 'food_orders_export_pdf' %}" class="btn btn-primary">📄 Export PDF Report</a>
+    <a href="{% url 'food_menu_admin' %}" class="btn btn-outline">🍽️ Menu</a>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom:16px;padding:16px;">
+  <form method="GET" style="display:flex;flex-wrap:wrap;gap:12px;align-items:end;margin:0;">
+    <div style="flex:1;min-width:200px;">
+      <label class="field-label" style="font-size:12px;font-weight:600;margin-bottom:4px;display:block;">Search Order</label>
+      <input type="text" name="query" value="{{ query }}" placeholder="Student name, roll, order ID..." style="width:100%;height:36px;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;background:inherit;color:inherit;"/>
+    </div>
+    <div style="min-width:140px;">
+      <label class="field-label" style="font-size:12px;font-weight:600;margin-bottom:4px;display:block;">Order Status</label>
+      <select name="status" style="width:100%;height:36px;padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;background:inherit;color:inherit;">
+        <option value="">All Statuses</option>
+        {% for val, label in status_choices %}
+        <option value="{{ val }}" {% if selected_status == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div style="min-width:140px;">
+      <label class="field-label" style="font-size:12px;font-weight:600;margin-bottom:4px;display:block;">Payment</label>
+      <select name="payment" style="width:100%;height:36px;padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;background:inherit;color:inherit;">
+        <option value="">All Payments</option>
+        {% for val, label in payment_choices %}
+        <option value="{{ val }}" {% if selected_payment == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <button type="submit" class="btn btn-primary" style="height:36px;padding:0 16px;">Search</button>
+    </div>
+    <div>
+      <a href="{% url 'food_orders_admin' %}" class="btn btn-outline" style="height:36px;padding:0 16px;display:inline-flex;align-items:center;">Reset</a>
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Student</th>
+          <th>Items</th>
+          <th>Total</th>
+          <th>UPI / Txn</th>
+          <th>Status</th>
+          <th>Update</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for order in orders %}
+        <tr>
+          <td style="font-weight:700;">{{ order.pk }}</td>
+          <td>
+            <div style="font-weight:600;">{{ order.student.full_name }}</div>
+            <div style="font-size:11px;color:var(--text-500);">{{ order.ordered_at|date:"M d, H:i" }}</div>
+          </td>
+          <td style="font-size:12px;">
+            {% for item in order.items.all %}{{ item.quantity }}× {{ item.food_item.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+          </td>
+          <td style="font-weight:700;color:var(--c-success);">₹{{ order.total_amount|floatformat:0 }}</td>
+          <td style="font-size:11px;">
+            <div>{{ order.upi_id|default:"—" }}</div>
+            <div style="font-family:monospace;color:var(--c-primary);">{{ order.transaction_id|truncatechars:14 }}</div>
+          </td>
+          <td><span class="badge badge-pending">{{ order.get_order_status_display }}</span></td>
+          <td>
+            <form method="POST" style="display:flex;gap:4px;">{% csrf_token %}
+              <input type="hidden" name="order_id" value="{{ order.pk }}"/>
+              <select name="order_status" style="font-size:11px;padding:4px;border-radius:6px;">
+                {% for val, label in order.STATUS_CHOICES %}
+                <option value="{{ val }}" {% if order.order_status == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+              <button type="submit" class="btn btn-sm btn-primary">Save</button>
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7" style="text-align:center;padding:24px;">No orders yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

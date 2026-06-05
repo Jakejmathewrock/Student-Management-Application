@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }} — EduAdmin Pro{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'room_list' %}">Hostel Rooms</a></li>
+<li class="breadcrumb-item active">{{ title }}</li>
+{% endblock %}
+
+{% block content %}
+<div style="max-width:800px;">
+  <form method="POST">
+    {% csrf_token %}
+    <div class="form-card">
+      <div class="form-card-header">
+        <div class="form-card-icon" style="background:rgba(59,130,246,0.12);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" width="20" height="20">
+            <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+          </svg>
+        </div>
+        <div>
+          <div style="font-size:16px;font-weight:700;color:var(--text-900);">{{ title }}</div>
+          <div style="font-size:12.5px;color:var(--text-500);">Configure a hostel room, capacity limit, and semester rent values.</div>
+        </div>
+      </div>
+
+      <!-- Room Form Info -->
+      <div class="form-section">
+        <div class="form-section-title">🏢 Room Specifications</div>
+        <div class="form-grid">
+          <div>
+            <label class="field-label required">Room Number / Name</label>
+            {{ form.room_number }}
+            {% if form.room_number.errors %}<div class="field-error">{{ form.room_number.errors.0 }}</div>{% endif %}
+          </div>
+          <div>
+            <label class="field-label required">Sharing Type</label>
+            {{ form.room_type }}
+            {% if form.room_type.errors %}<div class="field-error">{{ form.room_type.errors.0 }}</div>{% endif %}
+          </div>
+          <div>
+            <label class="field-label required">Bed Capacity</label>
+            {{ form.capacity }}
+            {% if form.capacity.errors %}<div class="field-error">{{ form.capacity.errors.0 }}</div>{% endif %}
+            <div style="font-size:11.5px;color:var(--text-500);margin-top:4px;">Total number of students allowed in this room.</div>
+          </div>
+          <div>
+            <label class="field-label required">Fee per Semester (₹)</label>
+            {{ form.fee_per_semester }}
+            {% if form.fee_per_semester.errors %}<div class="field-error">{{ form.fee_per_semester.errors.0 }}</div>{% endif %}
+            <div style="font-size:11.5px;color:var(--text-500);margin-top:4px;">Semester rental charged on student allocations.</div>
+          </div>
+          <div class="form-full">
+            <label class="field-label">Description / Features</label>
+            {{ form.description }}
+            {% if form.description.errors %}<div class="field-error">{{ form.description.errors.0 }}</div>{% endif %}
+          </div>
+        </div>
+      </div>
+
+      {% if form.errors %}
+      <div style="margin:0 20px 16px;padding:12px;background:var(--c-danger-s);border-radius:8px;font-size:13px;color:var(--c-danger);">
+        {% for field in form %}
+          {% for e in field.errors %}
+            <div>{{ field.label }}: {{ e }}</div>
+          {% endfor %}
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <div class="form-footer">
+        <a href="{% url 'room_list' %}" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="margin-right:4px;"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v14a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+          Save Room
+        </button>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.form-card input, .form-card select, .form-card textarea {
+  width:100%;
+  padding:8px 11px;
+  background:var(--bg-card);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  color:var(--text-900);
+  font-size:13px;
+  font-family:inherit;
+  outline:none;
+  transition:var(--transition);
+}
+.form-card input:focus, .form-card select:focus, .form-card textarea:focus {
+  border-color:var(--c-primary);
+  box-shadow:0 0 0 3px rgba(59,130,246,.15);
+}
+</style>
+{% endblock %}

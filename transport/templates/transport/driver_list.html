@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block title %}Drivers — EduAdmin Pro{% endblock %}
+{% block page_title %}Drivers{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'transport_dashboard' %}">Transport</a></li>
+<li class="breadcrumb-item active">Drivers</li>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h4>Drivers</h4><p>{{ drivers|length }} driver{{ drivers|length|pluralize }}</p></div>
+  <a href="{% url 'driver_add' %}" class="btn btn-primary">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Add Driver
+  </a>
+</div>
+<div class="card" style="margin-bottom:16px;padding:16px;">
+  <form method="GET" style="display:flex;flex-wrap:wrap;gap:12px;align-items:end;margin:0;">
+    <div style="flex:1;min-width:200px;">
+      <label class="field-label" style="font-size:12px;font-weight:600;margin-bottom:4px;display:block;">Search Driver</label>
+      <input type="text" name="query" value="{{ query|default:'' }}" placeholder="Driver name, driver ID, or phone number..." style="width:100%;height:36px;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;background:inherit;color:inherit;"/>
+    </div>
+    <div style="min-width:140px;">
+      <label class="field-label" style="font-size:12px;font-weight:600;margin-bottom:4px;display:block;">Route</label>
+      <select name="route" style="width:100%;height:36px;padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;background:inherit;color:inherit;">
+        <option value="">All Routes</option>
+        {% for r in routes %}
+        <option value="{{ r.pk }}" {% if selected_route == r.pk|stringformat:"i" %}selected{% endif %}>{{ r.route_number }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div style="min-width:140px;">
+      <label class="field-label" style="font-size:12px;font-weight:600;margin-bottom:4px;display:block;">Status</label>
+      <select name="status" style="width:100%;height:36px;padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;background:inherit;color:inherit;">
+        <option value="">All Statuses</option>
+        <option value="active" {% if selected_status == 'active' %}selected{% endif %}>Active</option>
+        <option value="on_leave" {% if selected_status == 'on_leave' %}selected{% endif %}>On Leave</option>
+        <option value="inactive" {% if selected_status == 'inactive' %}selected{% endif %}>Inactive</option>
+      </select>
+    </div>
+    <div>
+      <button type="submit" class="btn btn-primary" style="height:36px;padding:0 16px;">Search</button>
+    </div>
+    <div>
+      <a href="{% url 'driver_list' %}" class="btn btn-outline" style="height:36px;padding:0 16px;display:inline-flex;align-items:center;">Reset</a>
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr><th>Driver</th><th>License No.</th><th>License Exp.</th><th>Phone</th><th>Route</th><th>Status</th><th style="text-align:right;">Actions</th></tr>
+      </thead>
+      <tbody>
+        {% for driver in drivers %}
+        <tr>
+          <td>
+            <div class="cell-user">
+              {% if driver.photo %}<img src="{{ driver.photo.url }}" class="cell-avatar" alt=""/>
+              {% else %}<div class="cell-avatar-placeholder" style="background:rgba(167,139,250,0.15);color:#A78BFA;">{{ driver.full_name|first|upper }}</div>{% endif %}
+              <div>
+                <div class="cell-name">{{ driver.full_name }}</div>
+                <div class="cell-sub">{{ driver.driver_id }}</div>
+              </div>
+            </div>
+          </td>
+          <td style="font-family:monospace;font-size:12.5px;color:var(--c-primary);">{{ driver.license_number }}</td>
+          <td>
+            <span class="badge {% if driver.is_license_valid %}badge-active{% else %}badge-overdue{% endif %}">
+              {{ driver.license_expiry_date|date:"M d, Y" }}
+            </span>
+          </td>
+          <td style="color:var(--text-500);font-size:12.5px;">{{ driver.phone }}</td>
+          <td>{% if driver.assigned_route %}<span class="badge badge-primary">{{ driver.assigned_route.route_number }}</span>{% else %}<span style="color:var(--text-500);font-size:12px;">Unassigned</span>{% endif %}</td>
+          <td><span class="badge badge-{{ driver.status }}">● {{ driver.get_status_display }}</span></td>
+          <td>
+            <div class="row-actions">
+              <a href="{% url 'driver_detail' driver.pk %}" class="row-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></a>
+              <a href="{% url 'driver_edit' driver.pk %}" class="row-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></a>
+              <a href="{% url 'driver_delete' driver.pk %}" class="row-btn danger" data-confirm-href="{% url 'driver_delete' driver.pk %}" data-confirm-message="Delete driver {{ driver.full_name }}?"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6m5 0V4h4v2"/></svg></a>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7"><div class="empty-state"><h6>No drivers yet</h6><p><a href="{% url 'driver_add' %}">Add the first driver</a></p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

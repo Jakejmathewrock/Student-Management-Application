@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}Payment Failed{% endblock %}
+{% block content %}
+<div style="max-width:520px;margin:0 auto;text-align:center;">
+  <div class="card" style="padding:48px 36px;">
+    <div style="width:80px;height:80px;border-radius:50%;background:rgba(239,68,68,0.12);border:3px solid var(--c-danger);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2.5" width="38" height="38"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </div>
+    <h2 style="font-size:22px;font-weight:800;color:var(--text-900);margin-bottom:6px;">Payment Failed ❌</h2>
+    <p style="color:var(--text-500);font-size:13.5px;margin-bottom:24px;">Your payment could not be processed. No amount has been deducted.</p>
+    <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:24px;text-align:left;font-size:13.5px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="color:var(--text-500);">Transaction</span><span style="font-family:monospace;">#{{ txn.pk }}</span></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="color:var(--text-500);">Amount</span><span>₹{{ txn.amount|floatformat:0 }}</span></div>
+      <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-500);">Reason</span><span style="color:var(--c-danger);">{{ txn.notes|default:"Payment verification failed" }}</span></div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+      <a href="{% url 'payment_initiate' txn.fee_record.pk %}" class="btn btn-primary">↩ Try Again</a>
+      <a href="{% url 'payment_dashboard' %}" class="btn btn-secondary">Back to Payments</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,293 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}EduAdmin Campus{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: ['class', '[data-theme="dark"]'],
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+          colors: {
+            primary: '#2563EB',
+            success: '#22C55E',
+            warning: '#F59E0B',
+            danger: '#EF4444',
+            canvas: '#F8FAFC',
+            sidebar: '#0F172A'
+          },
+          borderRadius: { panel: '8px' }
+        }
+      }
+    };
+  </script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="{% static 'css/dashboard.css' %}" rel="stylesheet" />
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar" aria-label="Primary navigation">
+    <div class="sidebar-brand">
+      <div class="brand-icon"><i data-lucide="graduation-cap"></i></div>
+      <div class="brand-text">
+        <span class="brand-name">EduAdmin</span>
+        <span class="brand-sub">College OS</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Overview</div>
+      <a href="{% url 'dashboard' %}" class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+        <i data-lucide="layout-dashboard"></i><span>Dashboard</span>
+      </a>
+
+      <div class="nav-group">
+        <button type="button" class="nav-group-toggle" data-nav-group-toggle="students" aria-label="Toggle students navigation">
+          <span>Students</span><i data-lucide="chevron-down"></i>
+        </button>
+        <div class="nav-group-items">
+          <a href="{% url 'student_list' %}" class="nav-item {% if 'student' in request.resolver_match.url_name and request.resolver_match.url_name != 'student_add' %}active{% endif %}">
+            <i data-lucide="users"></i><span>All Students</span>
+          </a>
+          <a href="{% url 'student_add' %}" class="nav-item {% if request.resolver_match.url_name == 'student_add' %}active{% endif %}">
+            <i data-lucide="user-plus"></i><span>Add Student</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="nav-group">
+        <button type="button" class="nav-group-toggle" data-nav-group-toggle="academics" aria-label="Toggle academics navigation">
+          <span>Academics</span><i data-lucide="chevron-down"></i>
+        </button>
+        <div class="nav-group-items">
+          <a href="{% url 'department_list' %}" class="nav-item {% if 'department' in request.resolver_match.url_name %}active{% endif %}">
+            <i data-lucide="building-2"></i><span>Departments</span>
+          </a>
+          <a href="{% url 'course_list' %}" class="nav-item {% if 'course' in request.resolver_match.url_name %}active{% endif %}">
+            <i data-lucide="book-open"></i><span>Courses</span>
+          </a>
+          <a href="{% url 'teacher_list' %}" class="nav-item {% if 'teacher' in request.resolver_match.url_name %}active{% endif %}">
+            <i data-lucide="presentation"></i><span>Teachers</span>
+          </a>
+          <a href="{% url 'timetable_list' %}" class="nav-item {% if 'timetable' in request.resolver_match.url_name %}active{% endif %}">
+            <i data-lucide="calendar-clock"></i><span>Timetable</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="nav-group">
+        <button type="button" class="nav-group-toggle" data-nav-group-toggle="operations" aria-label="Toggle operations navigation">
+          <span>Operations</span><i data-lucide="chevron-down"></i>
+        </button>
+        <div class="nav-group-items">
+          <a href="{% url 'attendance_list' %}" class="nav-item {% if 'attendance' in request.resolver_match.url_name %}active{% endif %}">
+            <i data-lucide="calendar-check"></i><span>Attendance</span>
+          </a>
+          <a href="{% url 'result_list' %}" class="nav-item {% if 'result' in request.resolver_match.url_name %}active{% endif %}">
+            <i data-lucide="chart-no-axes-combined"></i><span>Results</span>
+          </a>
+          <a href="{% url 'assignment_list' %}" class="nav-item {% if 'assignment' in request.resolver_match.url_name %}active{% endif %}">
+            <i data-lucide="file-text"></i><span>Assignments</span>
+          </a>
+          <a href="{% url 'notice_list' %}" class="nav-item {% if 'notice' in request.resolver_match.url_name %}active{% endif %}">
+            <i data-lucide="megaphone"></i><span>Notices</span>
+          </a>
+          <a href="{% url 'fee_list' %}" class="nav-item {% if 'fee' in request.resolver_match.url_name %}active{% endif %}">
+            <i data-lucide="wallet"></i><span>Fees</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="nav-section-label">Exams</div>
+      <a href="{% url 'exam_list' %}" class="nav-item {% if 'exam' in request.resolver_match.url_name %}active{% endif %}">
+        <i data-lucide="file-check-2"></i><span>Manage Exams</span>
+      </a>
+      <a href="{% url 'exam_portal' %}" class="nav-item {% if request.resolver_match.url_name == 'exam_portal' %}active{% endif %}">
+        <i data-lucide="clipboard-list"></i><span>Exam Portal</span>
+      </a>
+
+      <div class="nav-section-label">Food Court</div>
+      <a href="{% url 'food_menu_admin' %}" class="nav-item {% if request.resolver_match.url_name == 'food_menu_admin' or request.resolver_match.url_name == 'food_item_add' %}active{% endif %}">
+        <i data-lucide="utensils"></i><span>Food Menu</span>
+      </a>
+      <a href="{% url 'food_orders_admin' %}" class="nav-item {% if request.resolver_match.url_name == 'food_orders_admin' %}active{% endif %}">
+        <i data-lucide="shopping-bag"></i><span>Food Orders</span>
+      </a>
+
+      <div class="nav-section-label">Library</div>
+      <a href="{% url 'book_list' %}" class="nav-item {% if 'book' in request.resolver_match.url_name %}active{% endif %}">
+        <i data-lucide="book-open"></i><span>Manage Books</span>
+      </a>
+      <a href="{% url 'issue_list' %}" class="nav-item {% if 'issue' in request.resolver_match.url_name %}active{% endif %}">
+        <i data-lucide="clipboard-check"></i><span>Book Checkouts</span>
+      </a>
+
+      <div class="nav-section-label">Hostel</div>
+      <a href="{% url 'room_list' %}" class="nav-item {% if 'room' in request.resolver_match.url_name %}active{% endif %}">
+        <i data-lucide="home"></i><span>Manage Rooms</span>
+      </a>
+      <a href="{% url 'allocation_list' %}" class="nav-item {% if 'allocation' in request.resolver_match.url_name %}active{% endif %}">
+        <i data-lucide="key-round"></i><span>Room Allocations</span>
+      </a>
+
+      <div class="nav-section-label">🧺 Laundry</div>
+      <a href="{% url 'laundry_portal' %}" class="nav-item {% if request.resolver_match.url_name == 'laundry_portal' %}active{% endif %}">
+        <i data-lucide="shirt"></i><span>Laundry Portal</span>
+      </a>
+      <a href="{% url 'laundry_admin_orders' %}" class="nav-item {% if 'laundry_admin' in request.resolver_match.url_name %}active{% endif %}">
+        <i data-lucide="washing-machine"></i><span>Laundry Orders</span>
+      </a>
+      <a href="{% url 'laundry_services_admin' %}" class="nav-item {% if request.resolver_match.url_name == 'laundry_services_admin' %}active{% endif %}">
+        <i data-lucide="settings-2"></i><span>Manage Services</span>
+      </a>
+
+      <div class="nav-section-label">🚌 Transport</div>
+      <a href="{% url 'transport_dashboard' %}" class="nav-item {% if request.resolver_match.url_name == 'transport_dashboard' %}active{% endif %}">
+        <i data-lucide="bus"></i><span>Transport Home</span>
+      </a>
+      <a href="{% url 'route_list' %}" class="nav-item {% if 'route' in request.resolver_match.url_name %}active{% endif %}">
+        <i data-lucide="map-pin"></i><span>Bus Routes</span>
+      </a>
+      <a href="{% url 'driver_list' %}" class="nav-item {% if 'driver' in request.resolver_match.url_name %}active{% endif %}">
+        <i data-lucide="user-circle-2"></i><span>Drivers</span>
+      </a>
+      <a href="{% url 'vehicle_list' %}" class="nav-item {% if 'vehicle' in request.resolver_match.url_name %}active{% endif %}">
+        <i data-lucide="truck"></i><span>Vehicles</span>
+      </a>
+      <a href="{% url 'transport_fee_list' %}" class="nav-item {% if 'transport_fee' in request.resolver_match.url_name %}active{% endif %}">
+        <i data-lucide="credit-card"></i><span>Transport Fees</span>
+      </a>
+
+      <div class="nav-section-label">Account</div>
+      <a href="{% url 'profile' %}" class="nav-item {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+        <i data-lucide="circle-user-round"></i><span>My Profile</span>
+      </a>
+      <a href="{% url 'logout' %}" class="nav-item text-danger-nav">
+        <i data-lucide="log-out"></i><span>Logout</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-footer-copy text-xs text-slate-400">
+        <div class="font-semibold text-slate-200">Enterprise ready</div>
+        <div>Secure campus management suite</div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main-content" id="mainContent">
+    <header class="top-navbar">
+      <div class="navbar-left">
+        <button type="button" class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+          <i data-lucide="panel-left"></i>
+        </button>
+        <div class="page-title">
+          <h5>{% block page_title %}Dashboard{% endblock %}</h5>
+          <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+              {% block breadcrumb %}
+              <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+              <li class="breadcrumb-item active" aria-current="page">Dashboard</li>
+              {% endblock %}
+            </ol>
+          </nav>
+        </div>
+      </div>
+
+      <div class="navbar-right">
+        <label class="search-bar" for="globalSearch">
+          <i data-lucide="search"></i>
+          <input type="search" placeholder="Search students, fees, notices..." id="globalSearch" />
+        </label>
+
+        <button type="button" class="icon-btn" id="themeToggle" aria-label="Toggle dark mode">
+          <i data-theme-icon data-lucide="moon"></i>
+        </button>
+
+        <div class="dropdown">
+          <button class="notification-bell dropdown-toggle" data-bs-toggle="dropdown" aria-label="Notifications">
+            <i data-lucide="bell"></i>
+            {% if unread_notifications_count %}
+            <span class="notification-dot">{{ unread_notifications_count }}</span>
+            {% endif %}
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end" style="min-width:320px;">
+            <li class="px-3 py-2">
+              <strong class="text-sm">Notifications</strong>
+              <div class="text-muted text-xs">Latest campus updates</div>
+            </li>
+            <li><hr class="dropdown-divider" /></li>
+            {% for notif in recent_notifications %}
+            <li>
+              <a class="dropdown-item" href="{{ notif.link|default:'#' }}" style="white-space:normal;">
+                {{ notif.message|truncatechars:72 }}
+                <div class="text-muted text-xs mt-1">{{ notif.created_at|timesince }} ago</div>
+              </a>
+            </li>
+            {% empty %}
+            <li><span class="dropdown-item text-muted">No notifications yet</span></li>
+            {% endfor %}
+          </ul>
+        </div>
+
+        <div class="dropdown">
+          <button class="user-btn dropdown-toggle" data-bs-toggle="dropdown" aria-label="User menu">
+            {% if request.user.profile.avatar %}
+              <img src="{{ request.user.profile.avatar.url }}" alt="" class="user-avatar" />
+            {% else %}
+              <span class="user-avatar-placeholder">{{ request.user.username|first|upper }}</span>
+            {% endif %}
+            <span class="user-info">
+              <span class="user-name">{{ request.user.get_full_name|default:request.user.username }}</span>
+              <span class="user-role">{% if request.user.profile %}{{ request.user.profile.role|title }}{% else %}Administrator{% endif %}</span>
+            </span>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="{% url 'profile' %}">Profile</a></li>
+            <li><hr class="dropdown-divider" /></li>
+            <li><a class="dropdown-item text-danger" href="{% url 'logout' %}">Logout</a></li>
+          </ul>
+        </div>
+      </div>
+    </header>
+
+    <div class="alerts-container">
+      {% for message in messages %}
+      <div class="alert alert-{{ message.tags|default:'info' }} custom-alert" role="alert">
+        {{ message }}
+      </div>
+      {% endfor %}
+    </div>
+
+    <section class="content-wrapper">
+      {% block content %}{% endblock %}
+    </section>
+  </main>
+</div>
+
+<div class="confirm-modal" id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+  <div class="confirm-dialog">
+    <h2 id="confirmTitle" class="text-lg font-bold">Confirm action</h2>
+    <p class="text-muted mt-2" data-confirm-message>Are you sure you want to continue?</p>
+    <div class="confirm-actions">
+      <button type="button" class="btn btn-secondary" data-modal-close>Cancel</button>
+      <a href="#" class="btn btn-danger" id="confirmAction">Continue</a>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="{% static 'js/dashboard.js' %}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

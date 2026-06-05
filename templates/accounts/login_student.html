@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Student Sign In — EduAdmin Pro</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  {% include 'accounts/_login_auth_styles.html' %}
+  <style>.submit-btn{background:linear-gradient(135deg,#16a34a,#15803d);}.tagline{font-size:26px;font-weight:800;color:#e8f0ff;}.tagline span{color:#22c55e;}.desc{font-size:13px;color:#4a6fa5;line-height:1.65;}</style>
+</head>
+<body>
+<div class="left">
+  <h1 class="tagline">Student <span>portal</span></h1>
+  <p class="desc">View your GPA, attendance, results, and apply for exams online with fee payment.</p>
+</div>
+<div class="right">
+  <div style="width:100%;">
+    <div class="form-title">👨‍🎓 Student Login</div>
+    <div class="form-sub">Sign in with your student username</div>
+    {% if messages %}{% for message in messages %}<div class="error-box">{{ message }}</div>{% endfor %}{% endif %}
+    <form method="POST">{% csrf_token %}
+      <div class="field"><label>Username</label><div class="input-wrap"><span class="ico">👤</span><input type="text" name="username" placeholder="e.g. cs001" required autofocus/></div></div>
+      <div class="field"><label>Password</label><div class="input-wrap"><span class="ico">🔒</span><input type="password" name="password" placeholder="••••••••" required/></div></div>
+      <button type="submit" class="submit-btn">Sign In →</button>
+    </form>
+    <div class="demo-box">Demo: <code>cs001</code> / <code>student123</code><br/><span style="font-size:10px;">Run <code>python create_portal_users.py</code> to create accounts</span></div>
+    <a href="{% url 'login' %}" class="back-link">← All login options</a>
+  </div>
+</div>
+</body>
+</html>

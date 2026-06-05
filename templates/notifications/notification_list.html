@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% block title %}Notification Center{% endblock %}
+{% block page_title %}Notification Center{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Notifications</li>
+{% endblock %}
+{% block extra_css %}
+<style>
+.notif-item{display:flex;align-items:flex-start;gap:14px;padding:14px 18px;border-bottom:1px solid var(--border);transition:background var(--transition);border-left:3px solid transparent;}
+.notif-item:last-child{border-bottom:none;}
+.notif-item:hover{background:var(--bg);}
+.notif-item.unread{background:rgba(99,102,241,0.04);border-left-color:var(--c-primary);}
+.notif-item.color-warning{border-left-color:var(--c-warning);}
+.notif-item.color-success{border-left-color:var(--c-success);}
+.notif-item.color-danger{border-left-color:var(--c-danger);}
+.notif-item.color-purple{border-left-color:var(--c-purple);}
+.notif-item.color-primary{border-left-color:var(--c-primary);}
+.notif-icon{font-size:22px;margin-top:1px;flex-shrink:0;}
+.notif-body{flex:1;min-width:0;}
+.notif-title{font-size:13.5px;font-weight:600;color:var(--text-900);margin-bottom:3px;}
+.notif-message{font-size:12.5px;color:var(--text-500);line-height:1.5;margin-bottom:5px;}
+.notif-meta{display:flex;align-items:center;gap:10px;font-size:11.5px;color:var(--text-500);}
+.notif-actions{display:flex;gap:6px;flex-shrink:0;}
+.filter-tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:16px;}
+.filter-tab{padding:6px 14px;border-radius:20px;font-size:12.5px;font-weight:500;text-decoration:none;color:var(--text-500);background:var(--bg);border:1px solid var(--border);transition:all var(--transition);}
+.filter-tab:hover,.filter-tab.active{background:var(--c-primary);color:#fff;border-color:var(--c-primary);}
+.kpi-mini{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:18px;}
+.kpi-mini-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;}
+.kpi-mini-num{font-size:22px;font-weight:800;color:var(--text-900);line-height:1;}
+.kpi-mini-label{font-size:11.5px;color:var(--text-500);margin-top:4px;}
+</style>
+{% endblock %}
+{% block content %}
+<!-- KPI Row -->
+<div class="kpi-mini">
+  <div class="kpi-mini-card">
+    <div class="kpi-mini-num">{{ total }}</div>
+    <div class="kpi-mini-label">Total</div>
+  </div>
+  <div class="kpi-mini-card">
+    <div class="kpi-mini-num" style="color:var(--c-primary);">{{ unread }}</div>
+    <div class="kpi-mini-label">Unread</div>
+  </div>
+  <div class="kpi-mini-card">
+    <div class="kpi-mini-num" style="color:var(--c-warning);">💳</div>
+    <div class="kpi-mini-label">Fee Alerts</div>
+  </div>
+  <div class="kpi-mini-card">
+    <div class="kpi-mini-num" style="color:var(--c-success);">📝</div>
+    <div class="kpi-mini-label">Assignments</div>
+  </div>
+</div>
+
+<!-- Page Header -->
+<div class="page-header">
+  <div style="font-size:13.5px;color:var(--text-500);">Showing {{ notifs|length }} notification{{ notifs|length|pluralize }}</div>
+  <div style="display:flex;gap:8px;">
+    {% if unread > 0 %}
+    <a href="{% url 'notification_mark_all_read' %}" class="btn btn-outline btn-sm">✔ Mark all read</a>
+    {% endif %}
+    {% if request.user.is_staff %}<a href="{% url 'notification_send' %}" class="btn btn-primary btn-sm">📤 Send Notification</a>{% endif %}
+  </div>
+</div>
+
+<!-- Filter Tabs -->
+<div class="filter-tabs">
+  <a href="{% url 'notification_list' %}" class="filter-tab {% if not ftype and not fread %}active{% endif %}">All</a>
+  <a href="?read=0" class="filter-tab {% if fread == '0' %}active{% endif %}">Unread {% if unread %}<span style="background:var(--c-danger);color:#fff;border-radius:10px;padding:0 5px;font-size:10px;margin-left:3px;">{{ unread }}</span>{% endif %}</a>
+  <a href="?type=fee_due" class="filter-tab {% if ftype == 'fee_due' %}active{% endif %}">💳 Fee Alerts</a>
+  <a href="?type=assignment" class="filter-tab {% if ftype == 'assignment' %}active{% endif %}">📝 Assignments</a>
+  <a href="?type=attendance" class="filter-tab {% if ftype == 'attendance' %}active{% endif %}">⚠️ Attendance</a>
+  <a href="?type=exam" class="filter-tab {% if ftype == 'exam' %}active{% endif %}">📋 Exams</a>
+  <a href="?type=announcement" class="filter-tab {% if ftype == 'announcement' %}active{% endif %}">📢 Announcements</a>
+</div>
+
+<!-- Notifications List -->
+<div class="card" style="overflow:hidden;">
+  {% for notif in notifs %}
+  <div class="notif-item {% if not notif.is_read %}unread{% endif %} color-{{ notif.color }}">
+    <div class="notif-icon">{{ notif.icon }}</div>
+    <div class="notif-body">
+      {% if notif.title %}<div class="notif-title">{{ notif.title }}</div>{% endif %}
+      <div class="notif-message">{{ notif.message }}</div>
+      <div class="notif-meta">
+        <span>{{ notif.created_at|timesince }} ago</span>
+        <span class="badge {% if notif.is_read %}badge-inactive{% else %}badge-primary{% endif %}" style="font-size:10px;padding:2px 7px;">{% if notif.is_read %}Read{% else %}Unread{% endif %}</span>
+        <span class="badge badge-purple" style="font-size:10px;padding:2px 7px;">{{ notif.priority|capfirst }}</span>
+        <span style="font-size:11px;">{{ notif.get_notif_type_display }}</span>
+      </div>
+    </div>
+    <div class="notif-actions">
+      {% if not notif.is_read %}
+      <a href="{% url 'notification_mark_read' notif.pk %}" class="row-btn" title="Mark as read" style="font-size:14px;">✔</a>
+      {% endif %}
+      <a href="{% url 'notification_delete' notif.pk %}" class="row-btn danger" title="Delete" onclick="return confirm('Delete this notification?')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6m5 0V4h4v2"/></svg>
+      </a>
+    </div>
+  </div>
+  {% empty %}
+  <div class="empty-state" style="padding:60px 20px;">
+    <div style="font-size:40px;margin-bottom:12px;">🔔</div>
+    <h6>No notifications</h6>
+    <p>You're all caught up! Nothing to show here.</p>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

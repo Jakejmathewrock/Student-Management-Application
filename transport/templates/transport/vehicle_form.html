@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'transport_dashboard' %}">Transport</a></li>
+<li class="breadcrumb-item"><a href="{% url 'vehicle_list' %}">Vehicles</a></li>
+<li class="breadcrumb-item active">{{ title }}</li>
+{% endblock %}
+{% block content %}
+<div style="max-width:760px;">
+<form method="POST" enctype="multipart/form-data">{% csrf_token %}
+<div class="form-card">
+  <div class="form-card-header">
+    <div class="form-card-icon" style="background:rgba(34,197,94,0.12);">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8zM1 16h20M5.5 21a1.5 1.5 0 100-3 1.5 1.5 0 000 3zM18.5 21a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/></svg>
+    </div>
+    <div><div style="font-size:15px;font-weight:700;color:var(--text-900);">{{ title }}</div></div>
+  </div>
+  <div class="form-section">
+    <div class="form-section-title">Vehicle Details</div>
+    <div class="form-grid">
+      <div><label class="field-label required">Vehicle Number</label>{{ form.vehicle_number }}</div>
+      <div><label class="field-label required">Type</label>{{ form.vehicle_type }}</div>
+      <div><label class="field-label required">Make & Model</label>{{ form.make_model }}</div>
+      <div><label class="field-label required">Manufacturing Year</label>{{ form.manufacturing_year }}</div>
+      <div><label class="field-label">Seating Capacity</label>{{ form.seating_capacity }}</div>
+      <div><label class="field-label">Fuel Type</label>{{ form.fuel_type }}</div>
+      <div><label class="field-label required">Chassis Number</label>{{ form.chassis_number }}</div>
+      <div><label class="field-label">Engine Number</label>{{ form.engine_number }}</div>
+      <div><label class="field-label">Mileage (km/l)</label>{{ form.mileage }}</div>
+      <div><label class="field-label">Status</label>{{ form.status }}</div>
+    </div>
+  </div>
+  <div class="form-section">
+    <div class="form-section-title">Registration & Insurance</div>
+    <div class="form-grid">
+      <div><label class="field-label required">Registration Date</label>{{ form.registration_date }}</div>
+      <div><label class="field-label required">Registration Expiry</label>{{ form.registration_expiry }}</div>
+      <div><label class="field-label">Insurance Number</label>{{ form.insurance_number }}</div>
+      <div><label class="field-label">Insurance Expiry</label>{{ form.insurance_expiry }}</div>
+      <div><label class="field-label">Fitness Certificate No.</label>{{ form.fitness_certificate_number }}</div>
+      <div><label class="field-label">Fitness Expiry</label>{{ form.fitness_expiry }}</div>
+    </div>
+  </div>
+  <div class="form-section">
+    <div class="form-section-title">Assignment & Tracking</div>
+    <div class="form-grid">
+      <div><label class="field-label">Assigned Route</label>{{ form.current_route }}</div>
+      <div><label class="field-label">Assigned Driver</label>{{ form.assigned_driver }}</div>
+      <div><label class="field-label">Current Odometer (km)</label>{{ form.current_odometer }}</div>
+      <div style="display:flex;align-items:flex-end;padding-bottom:2px;"><label style="display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--text-700);cursor:pointer;">{{ form.gps_enabled }}<span>GPS Enabled</span></label></div>
+      <div><label class="field-label">GPS Device ID</label>{{ form.gps_device_id }}</div>
+      <div><label class="field-label">Photo</label>{{ form.photo }}</div>
+    </div>
+  </div>
+  <div class="form-footer">
+    <a href="{% url 'vehicle_list' %}" class="btn btn-secondary">Cancel</a>
+    <button type="submit" class="btn btn-primary">Save Vehicle</button>
+  </div>
+</div>
+</form>
+</div>
+{% endblock %}
+{% block extra_css %}<style>.form-card input,.form-card select,.form-card textarea{width:100%;padding:8px 11px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-900);font-size:13px;font-family:inherit;outline:none;transition:var(--transition);}.form-card input:focus,.form-card select:focus{border-color:var(--c-primary);box-shadow:0 0 0 3px rgba(59,130,246,.15);}.form-card input[type=checkbox]{width:auto;}.form-card input[type=file]{padding:5px;}</style>{% endblock %}

@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block title %}Food Menu — Admin{% endblock %}
+{% block page_title %}Food Court Menu{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+<li class="breadcrumb-item active">Food Menu</li>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div><h4>🍽️ Food Court Menu</h4><p>Manage items and prices</p></div>
+  <div style="display:flex;gap:8px;">
+    <a href="{% url 'food_orders_admin' %}" class="btn btn-outline">📦 Orders</a>
+    <a href="{% url 'food_item_add' %}" class="btn btn-primary">+ Add Item</a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr><th></th><th>Name</th><th>Category</th><th>Price</th><th>Available</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr>
+          <td style="font-size:22px;">{{ item.emoji }}</td>
+          <td style="font-weight:600;">{{ item.name }}<div style="font-size:11px;color:var(--text-500);">{{ item.description }}</div></td>
+          <td><span class="badge badge-primary">{{ item.get_category_display }}</span></td>
+          <td style="font-weight:700;color:var(--c-success);">₹{{ item.price|floatformat:0 }}</td>
+          <td>{% if item.is_available %}<span class="badge badge-active">Yes</span>{% else %}<span class="badge badge-inactive">No</span>{% endif %}</td>
+          <td><a href="{% url 'food_item_edit' item.pk %}" class="btn btn-sm btn-outline">Edit</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" style="text-align:center;padding:24px;">No items. Run <code>python seed_food_court.py</code> or add manually.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

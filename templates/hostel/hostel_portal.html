@@ -1,0 +1,288 @@
+{% extends 'base_portal.html' %}
+{% block title %}Hostel Portal — EduAdmin Pro{% endblock %}
+{% block page_title %}Hostel Accommodation{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'student_dashboard' %}">Home</a></li>
+<li class="breadcrumb-item active">Hostel Details</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.laundry-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:10px; }
+.laundry-item { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:14px 12px; text-align:center; transition:var(--transition); }
+.laundry-item:hover { border-color:var(--c-primary); transform:translateY(-2px); box-shadow:0 4px 16px rgba(59,130,246,0.15); }
+.laundry-emoji { font-size:28px; display:block; margin-bottom:7px; }
+.laundry-name  { font-size:12px; font-weight:700; color:var(--text-900); margin-bottom:4px; line-height:1.3; }
+.laundry-desc  { font-size:10.5px; color:var(--text-500); margin-bottom:6px; line-height:1.4; }
+.laundry-price { font-size:17px; font-weight:900; color:var(--c-success); }
+.laundry-unit  { font-size:10px; color:var(--text-500); }
+.laundry-time  { display:inline-block; margin-top:5px; font-size:10px; background:var(--bg); border:1px solid var(--border); border-radius:50px; padding:2px 7px; color:var(--text-500); }
+.cat-head      { font-size:13px; font-weight:700; color:var(--c-primary); text-transform:uppercase; letter-spacing:.6px; margin-bottom:10px; padding-bottom:8px; border-bottom:2px solid rgba(59,130,246,0.18); display:flex; align-items:center; gap:8px; }
+.rule-item     { display:flex; gap:12px; padding:10px 0; border-bottom:1px solid var(--border); }
+.rule-item:last-child { border-bottom:none; }
+.rule-num      { width:26px; height:26px; border-radius:50%; background:var(--c-primary); color:#fff; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px; }
+.rule-text     { font-size:13.5px; color:var(--text-700); line-height:1.5; }
+.section-title { font-size:16px; font-weight:800; color:var(--text-900); margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{% if allocation %}
+<!-- ── ALLOCATED: Show room info ── -->
+
+<!-- Top Row: Room Card + Fee Card + Quick Actions -->
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px;">
+
+  <!-- Room Details -->
+  <div class="card" style="padding:22px;">
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-500);margin-bottom:10px;">🏠 My Room</div>
+    <div style="font-size:32px;font-weight:900;color:var(--c-primary);font-family:monospace;">{{ allocation.room.room_number }}</div>
+    <span class="badge badge-purple" style="margin:6px 0 12px;display:inline-block;">{{ allocation.room.get_room_type_display }}</span>
+    <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;border-top:1px solid var(--border);padding-top:12px;">
+      <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-500);">Allocated</span><strong>{{ allocation.allocated_date|date:"M d, Y" }}</strong></div>
+      <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-500);">Capacity</span><strong>{{ allocation.room.capacity }} beds</strong></div>
+      <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-500);">Occupancy</span><strong>{{ allocation.room.current_occupancy }} / {{ allocation.room.capacity }}</strong></div>
+      <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-500);">Status</span><span class="badge badge-active">● Active</span></div>
+    </div>
+  </div>
+
+  <!-- Hostel Fee Card -->
+  <div class="card" style="padding:22px;border-left:4px solid {% if hostel_fee_status == 'Paid' %}var(--c-success){% else %}var(--c-danger){% endif %};">
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-500);margin-bottom:10px;">💳 Semester Billing</div>
+    <div style="font-size:30px;font-weight:900;color:var(--c-success);">₹{{ allocation.room.fee_per_semester|floatformat:0 }}</div>
+    <div style="font-size:11.5px;color:var(--text-500);margin-bottom:14px;">per semester</div>
+    <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;border-top:1px solid var(--border);padding-top:12px;">
+      <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-500);">Outstanding Due</span><strong style="color:var(--c-danger);">₹{{ hostel_fee_due|floatformat:0 }}</strong></div>
+      <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-500);">Payment Status</span>
+        <span class="badge {% if hostel_fee_status == 'Paid' %}badge-active{% else %}badge-overdue{% endif %}">{{ hostel_fee_status }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Info -->
+  <div class="card" style="padding:22px;">
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-500);margin-bottom:10px;">📋 Quick Info</div>
+    <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;">
+      <div style="padding:10px;background:var(--bg);border-radius:8px;"><div style="color:var(--text-500);font-size:11px;margin-bottom:3px;">Warden Contact</div><div style="font-weight:600;">📞 +91-98765-43210</div></div>
+      <div style="padding:10px;background:var(--bg);border-radius:8px;"><div style="color:var(--text-500);font-size:11px;margin-bottom:3px;">Office Hours</div><div style="font-weight:600;">⏰ 9 AM – 6 PM (Mon–Sat)</div></div>
+      <div style="padding:10px;background:var(--bg);border-radius:8px;"><div style="color:var(--text-500);font-size:11px;margin-bottom:3px;">Emergency</div><div style="font-weight:600;">🚨 +91-98765-00000</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Roommates -->
+{% if roommates %}
+<div class="card" style="margin-bottom:20px;">
+  <div class="card-header"><span class="card-title">👥 My Roommates — Room {{ allocation.room.room_number }}</span></div>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th>Student</th><th>Roll Number</th><th>Department</th><th>Course</th><th>Email</th></tr></thead>
+      <tbody>
+        {% for rm in roommates %}
+        <tr>
+          <td>
+            <div class="cell-user">
+              {% if rm.student.photo %}<img src="{{ rm.student.photo.url }}" class="cell-avatar" alt=""/>
+              {% else %}<div class="cell-avatar-placeholder">{{ rm.student.full_name|first|upper }}</div>{% endif %}
+              <div class="cell-name">{{ rm.student.full_name }}</div>
+            </div>
+          </td>
+          <td style="font-family:monospace;font-size:12.5px;color:var(--c-primary);">{{ rm.student.roll_number }}</td>
+          <td style="color:var(--text-500);font-size:12.5px;">{{ rm.student.department|default:"—" }}</td>
+          <td><span class="badge badge-primary">{{ rm.student.course.code|default:"—" }}</span></td>
+          <td><a href="mailto:{{ rm.student.email }}" style="color:var(--c-primary);font-size:12.5px;">{{ rm.student.email }}</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+{% else %}
+<!-- ── NOT ALLOCATED: Room Booking Request ── -->
+<div class="card" style="margin-bottom:20px;overflow:hidden;">
+  <div style="background:linear-gradient(135deg,#1E3A8A,#2563EB);padding:24px 28px;">
+    <div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:4px;">🏠 No Room Allocated Yet</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.75);">You don't have a hostel room assigned. Request one below.</div>
+  </div>
+  <div class="card-body">
+    {% if booking_success %}
+    <div style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:8px;padding:16px;text-align:center;font-size:14px;color:var(--c-success);font-weight:600;">
+      ✅ Room request submitted successfully! The hostel office will contact you within 2 working days.
+    </div>
+    {% else %}
+    <p style="font-size:13.5px;color:var(--text-500);margin-bottom:16px;">Fill the form below to submit a room allocation request to the hostel administration.</p>
+    <form method="POST">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="room_request"/>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+        <div>
+          <label style="font-size:12px;font-weight:600;color:var(--text-500);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Preferred Room Type</label>
+          <select name="room_type_pref" style="width:100%;padding:8px 11px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-900);font-size:13px;outline:none;">
+            <option value="">-- Select --</option>
+            <option value="single">Single (1 bed) — ₹12,000/sem</option>
+            <option value="double">Double (2 beds) — ₹8,000/sem</option>
+            <option value="triple">Triple (3 beds) — ₹6,000/sem</option>
+            <option value="quad">Quad (4 beds) — ₹4,500/sem</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:600;color:var(--text-500);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Preferred Block</label>
+          <select name="block_pref" style="width:100%;padding:8px 11px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-900);font-size:13px;outline:none;">
+            <option value="any">Any Block</option>
+            <option value="A">Block A</option>
+            <option value="B">Block B</option>
+            <option value="C">Block C</option>
+          </select>
+        </div>
+        <div style="grid-column:1/-1;">
+          <label style="font-size:12px;font-weight:600;color:var(--text-500);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Reason / Special Requirements</label>
+          <textarea name="reason" rows="3" style="width:100%;padding:8px 11px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-900);font-size:13px;resize:vertical;outline:none;" placeholder="e.g. Medical condition, accessibility needs, preferred roommate..."></textarea>
+        </div>
+      </div>
+      {% if available_rooms %}
+      <div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:12.5px;color:var(--text-500);">
+        💡 <strong>{{ available_rooms|length }} room{{ available_rooms|length|pluralize }}</strong> currently available:
+        {% for room in available_rooms %}<span class="badge badge-primary" style="margin:2px;">{{ room.room_number }} ({{ room.get_room_type_display }})</span>{% endfor %}
+      </div>
+      {% endif %}
+      <button type="submit" class="btn btn-primary">📨 Submit Room Request</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+<!-- ══════════════════════════════════════════
+     🏠  HOSTEL RULES & REGULATIONS
+     ══════════════════════════════════════════ -->
+<div class="card" style="margin-bottom:20px;">
+  <div class="card-header" style="background:rgba(239,68,68,0.05);border-bottom-color:rgba(239,68,68,0.15);">
+    <span class="card-title" style="color:var(--c-danger);">📜 Hostel Rules &amp; Regulations</span>
+    <span class="badge badge-overdue">Must Follow</span>
+  </div>
+  <div class="card-body">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;">
+
+      <!-- Column 1 -->
+      <div style="padding-right:20px;border-right:1px solid var(--border);">
+        <div style="font-size:12px;font-weight:700;color:var(--c-primary);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">⏰ Timings</div>
+        <div class="rule-item"><div class="rule-num">1</div><div class="rule-text">Gates close at <strong>10:00 PM</strong> daily. Students must return before closing time.</div></div>
+        <div class="rule-item"><div class="rule-num">2</div><div class="rule-text">Lights off in common areas by <strong>11:00 PM</strong>. Personal study lights allowed till 12 AM.</div></div>
+        <div class="rule-item"><div class="rule-num">3</div><div class="rule-text">Morning assembly attendance is mandatory on <strong>Mondays at 7:30 AM</strong>.</div></div>
+        <div class="rule-item"><div class="rule-num">4</div><div class="rule-text">Mess timings: Breakfast 7–9 AM, Lunch 12–2 PM, Dinner 7–9 PM.</div></div>
+
+        <div style="font-size:12px;font-weight:700;color:var(--c-primary);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 12px;">🏠 Room Rules</div>
+        <div class="rule-item"><div class="rule-num">5</div><div class="rule-text">Keep rooms clean. Weekly inspection every <strong>Saturday at 9 AM</strong>.</div></div>
+        <div class="rule-item"><div class="rule-num">6</div><div class="rule-text">No rearranging of hostel furniture. Report damage immediately to the warden.</div></div>
+        <div class="rule-item"><div class="rule-num">7</div><div class="rule-text">No cooking inside rooms. Use the designated kitchen area only.</div></div>
+        <div class="rule-item"><div class="rule-num">8</div><div class="rule-text">Visitors allowed only in the <strong>common visiting area</strong> between 4–8 PM.</div></div>
+      </div>
+
+      <!-- Column 2 -->
+      <div style="padding-left:20px;">
+        <div style="font-size:12px;font-weight:700;color:var(--c-danger);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">🚫 Strictly Prohibited</div>
+        <div class="rule-item"><div class="rule-num" style="background:var(--c-danger);">9</div><div class="rule-text"><strong>No alcohol, smoking, or tobacco</strong> inside hostel premises. Immediate expulsion.</div></div>
+        <div class="rule-item"><div class="rule-num" style="background:var(--c-danger);">10</div><div class="rule-text">No ragging of any kind. Strict zero-tolerance policy enforced.</div></div>
+        <div class="rule-item"><div class="rule-num" style="background:var(--c-danger);">11</div><div class="rule-text">No outsiders in rooms. Guests must be signed in at the gate register.</div></div>
+        <div class="rule-item"><div class="rule-num" style="background:var(--c-danger);">12</div><div class="rule-text">No gambling, loud music, or disturbing other residents after 10 PM.</div></div>
+
+        <div style="font-size:12px;font-weight:700;color:var(--c-warning);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 12px;">⚠️ Fees &amp; Fines</div>
+        <div class="rule-item"><div class="rule-num" style="background:var(--c-warning);color:#fff;">13</div><div class="rule-text">Hostel fee must be paid within <strong>30 days</strong> of semester start. Late fine: ₹100/week.</div></div>
+        <div class="rule-item"><div class="rule-num" style="background:var(--c-warning);color:#fff;">14</div><div class="rule-text">Room damage will be charged at full repair cost from the student's account.</div></div>
+        <div class="rule-item"><div class="rule-num" style="background:var(--c-warning);color:#fff;">15</div><div class="rule-text">Checkout requires 15-day notice. No refund for early departures without approval.</div></div>
+        <div class="rule-item"><div class="rule-num" style="background:var(--c-warning);color:#fff;">16</div><div class="rule-text">Lost room key replacement: ₹500. Lost ID card: ₹200.</div></div>
+      </div>
+    </div>
+
+    <div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.15);border-radius:8px;padding:12px 16px;margin-top:16px;font-size:12.5px;color:var(--text-500);display:flex;gap:10px;align-items:flex-start;">
+      <span style="font-size:18px;">ℹ️</span>
+      <span>Violation of any rule may result in disciplinary action including <strong>suspension of hostel privileges</strong>. For grievances, contact the Warden's office or email <strong>hostel@eduadmin.edu</strong>.</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     🧺  LAUNDRY SERVICES (with fee per item)
+     ══════════════════════════════════════════ -->
+<div class="card" style="margin-bottom:20px;overflow:hidden;">
+
+  <!-- Laundry Banner -->
+  <div style="background:linear-gradient(135deg,#1E3A8A 0%,#2563EB 50%,#3B82F6 100%);padding:22px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+    <div>
+      <div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:4px;">🧺 Campus Laundry Services</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.75);">Book any service below — we collect from your room and deliver clean.</div>
+      <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;">
+        <span style="background:rgba(255,255,255,0.15);color:#fff;padding:3px 11px;border-radius:50px;font-size:11.5px;">⚡ 24hr turnaround</span>
+        <span style="background:rgba(255,255,255,0.15);color:#fff;padding:3px 11px;border-radius:50px;font-size:11.5px;">💳 UPI payment</span>
+        <span style="background:rgba(255,255,255,0.15);color:#fff;padding:3px 11px;border-radius:50px;font-size:11.5px;">🚪 Room delivery</span>
+        <span style="background:rgba(255,255,255,0.15);color:#fff;padding:3px 11px;border-radius:50px;font-size:11.5px;">31 services</span>
+      </div>
+    </div>
+    <a href="{% url 'laundry_place_order' %}" style="background:#fff;color:#2563EB;border:none;font-weight:700;font-size:14px;padding:11px 22px;border-radius:8px;text-decoration:none;white-space:nowrap;">+ Place Order →</a>
+  </div>
+
+  <div style="padding:24px 28px;">
+
+    {% for cat_key, cat_data in laundry_grouped.items %}
+    <div style="margin-bottom:22px;">
+      <div class="cat-head">{{ cat_data.meta.0 }} {{ cat_data.meta.1 }}
+        <span class="badge badge-primary" style="font-size:10.5px;">{{ cat_data.items|length }} service{{ cat_data.items|length|pluralize }}</span>
+      </div>
+      <div class="laundry-grid">
+        {% for svc in cat_data.items %}
+        <div class="laundry-item" {% if cat_key == 'bedding' %}style="border-color:rgba(139,92,246,0.25);"{% elif cat_key == 'towels' %}style="border-color:rgba(6,182,212,0.25);"{% elif cat_key == 'special' %}style="border-color:rgba(245,158,11,0.25);"{% endif %}>
+          <span class="laundry-emoji">{{ svc.emoji }}</span>
+          <div class="laundry-name">{{ svc.name }}</div>
+          {% if svc.description %}<div class="laundry-desc">{{ svc.description }}</div>{% endif %}
+          <div class="laundry-price" {% if cat_key == 'bedding' %}style="color:var(--c-purple);"{% elif cat_key == 'towels' %}style="color:var(--c-cyan);"{% elif cat_key == 'special' %}style="color:var(--c-warning);"{% endif %}>₹{{ svc.price_per_item }}</div>
+          <div class="laundry-unit">{{ svc.unit }}</div>
+          <div class="laundry-time">⏱ {{ svc.turnaround_hrs }}h</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+
+    <!-- Place Order CTA -->
+    <div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:var(--radius);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:8px;">
+      <div>
+        <div style="font-size:14px;font-weight:700;color:var(--text-900);">Ready to place your laundry order?</div>
+        <div style="font-size:12.5px;color:var(--text-500);margin-top:3px;">Select items, pay via UPI — we pick up from your room!</div>
+      </div>
+      <a href="{% url 'laundry_place_order' %}" class="btn btn-primary" style="font-weight:700;padding:10px 22px;">🧺 Place Order Now</a>
+    </div>
+  </div>
+
+  <!-- Recent Orders -->
+  {% if recent_laundry_orders %}
+  <div style="border-top:1px solid var(--border);padding:16px 28px;">
+    <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-500);margin-bottom:10px;">🕐 My Recent Laundry Orders</div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      {% for order in recent_laundry_orders %}
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--bg);border-radius:8px;border:1px solid var(--border);">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span style="font-size:20px;">🧺</span>
+          <div>
+            <div style="font-family:monospace;font-size:13px;font-weight:700;color:var(--c-primary);">{{ order.order_number }}</div>
+            <div style="font-size:11.5px;color:var(--text-500);">{{ order.ordered_at|date:"M d, Y" }} · {{ order.items.count }} item{{ order.items.count|pluralize }}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-weight:800;color:var(--c-success);">₹{{ order.total_amount|floatformat:0 }}</span>
+          <span class="badge {% if order.status == 'delivered' %}badge-active{% elif order.status == 'ready' %}badge-primary{% elif order.status == 'processing' or order.status == 'collected' %}badge-pending{% else %}badge-inactive{% endif %}">{{ order.get_status_display }}</span>
+          <a href="{% url 'laundry_order_detail' order.pk %}" class="btn btn-sm btn-outline" style="font-size:11px;">View</a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <div style="margin-top:10px;text-align:right;">
+      <a href="{% url 'laundry_my_orders' %}" style="font-size:12.5px;color:var(--c-primary);">View all laundry orders →</a>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}

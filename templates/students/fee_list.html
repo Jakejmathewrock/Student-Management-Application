@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+{% block title %}Fee Management — EduAdmin Pro{% endblock %}
+{% block page_title %}Fee Management{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+<li class="breadcrumb-item active">Fees</li>
+{% endblock %}
+
+{% block content %}
+<!-- ── Summary KPI Row ── -->
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;">
+  <div class="kpi-card" style="--kpi-color:#3B82F6;--kpi-bg:rgba(59,130,246,0.12);">
+    <div class="kpi-header">
+      <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2"><path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg></div>
+      <span class="kpi-trend up">{{ total_records }} records</span>
+    </div>
+    <div class="kpi-value" style="font-size:26px;">₹{{ fee_expected|floatformat:0 }}</div>
+    <div class="kpi-label">Total Expected</div>
+    <div class="kpi-sub">All fee records combined</div>
+  </div>
+
+  <div class="kpi-card" style="--kpi-color:#22C55E;--kpi-bg:rgba(34,197,94,0.12);">
+    <div class="kpi-header">
+      <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+      <span class="kpi-trend up">{{ collection_rate }}%</span>
+    </div>
+    <div class="kpi-value" style="font-size:26px;color:var(--c-success);">₹{{ fee_collected|floatformat:0 }}</div>
+    <div class="kpi-label">Total Collected</div>
+    <div class="kpi-sub">{{ paid_count }} fully paid records</div>
+  </div>
+
+  <div class="kpi-card" style="--kpi-color:#F59E0B;--kpi-bg:rgba(245,158,11,0.12);">
+    <div class="kpi-header">
+      <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+      <span class="kpi-trend down">{{ pending_count }} pending</span>
+    </div>
+    <div class="kpi-value" style="font-size:26px;color:var(--c-warning);">₹{{ fee_due|floatformat:0 }}</div>
+    <div class="kpi-label">Outstanding Due</div>
+    <div class="kpi-sub">Needs collection</div>
+  </div>
+
+  <div class="kpi-card" style="--kpi-color:#EF4444;--kpi-bg:rgba(239,68,68,0.12);">
+    <div class="kpi-header">
+      <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
+      <span class="kpi-trend down">{{ overdue_count }} overdue</span>
+    </div>
+    <div class="kpi-value" style="font-size:26px;color:var(--c-danger);">{{ overdue_count }}</div>
+    <div class="kpi-label">Overdue Records</div>
+    <div class="kpi-sub">Past due date</div>
+  </div>
+</div>
+
+<!-- ── Charts Row ── -->
+<div style="display:grid;grid-template-columns:1fr 340px;gap:14px;margin-bottom:20px;">
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">📊 Fee Collection Progress</span>
+      <span class="badge badge-active">{{ collection_rate }}% collected</span>
+    </div>
+    <div class="card-body"><div id="feeProgressChart" style="height:220px;"></div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><span class="card-title">🥧 Status Breakdown</span></div>
+    <div class="card-body">
+      <div id="feeStatusChart" style="height:180px;"></div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;font-size:12.5px;">
+        <div style="display:flex;justify-content:space-between;"><span style="color:var(--c-success);">● Paid</span><strong>{{ paid_count }}</strong></div>
+        <div style="display:flex;justify-content:space-between;"><span style="color:var(--c-warning);">● Pending</span><strong>{{ pending_count }}</strong></div>
+        <div style="display:flex;justify-content:space-between;"><span style="color:var(--c-danger);">● Overdue</span><strong>{{ overdue_count }}</strong></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Table ── -->
+<div class="page-header" style="margin-bottom:12px;">
+  <div><h4>Fee Records</h4><p>{{ total_records }} student{{ total_records|pluralize }} total</p></div>
+  <a href="{% url 'fee_add' %}" class="btn btn-primary">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Add Fee Record
+  </a>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Student</th>
+          <th>Tuition</th>
+          <th>Exam</th>
+          <th>Hostel</th>
+          <th style="color:var(--c-success);">Paid ✓</th>
+          <th style="color:var(--c-danger);">Due ↓</th>
+          <th>Status</th>
+          <th>Due Date</th>
+          <th style="text-align:right;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for fee in fees %}
+        <tr>
+          <td>
+            <div class="cell-user">
+              <div class="cell-avatar-placeholder">{{ fee.student.full_name|first|upper }}</div>
+              <div>
+                <div class="cell-name">{{ fee.student.full_name }}</div>
+                <div class="cell-sub">{{ fee.student.roll_number }}</div>
+              </div>
+            </div>
+          </td>
+          <td style="font-size:12.5px;color:var(--text-500);">₹{{ fee.tuition_fee|floatformat:0 }}</td>
+          <td style="font-size:12.5px;color:var(--text-500);">₹{{ fee.exam_fee|floatformat:0 }}</td>
+          <td style="font-size:12.5px;color:var(--text-500);">₹{{ fee.hostel_fee|floatformat:0 }}</td>
+          <td style="color:var(--c-success);font-weight:600;font-size:12.5px;">₹{{ fee.paid_amount|floatformat:0 }}</td>
+          <td style="font-weight:700;font-size:12.5px;color:{% if fee.total_due > 0 %}var(--c-danger){% else %}var(--c-success){% endif %};">
+            {% if fee.total_due > 0 %}₹{{ fee.total_due|floatformat:0 }}{% else %}—{% endif %}
+          </td>
+          <td><span class="badge badge-{{ fee.status }}"><span class="badge-dot"></span>{{ fee.get_status_display }}</span></td>
+          <td style="font-size:12px;color:var(--text-500);">{{ fee.due_date|date:"M d, Y"|default:"—" }}</td>
+          <td>
+            <div class="row-actions">
+              {% if fee.total_due > 0 %}
+              <a href="{% url 'send_fee_reminder' fee.pk %}" class="btn btn-sm btn-outline" style="padding:4px 10px;font-size:11.5px;margin-right:4px;" title="Send direct reminder notification">🔔 Remind</a>
+              <a href="{% url 'fee_payment' fee.pk %}" class="btn btn-sm btn-primary" style="padding:4px 12px;font-size:11.5px;">💳 Pay</a>
+              {% else %}
+              <span class="badge badge-active">✓ Paid</span>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="9">
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="40" height="40"><path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+            <h6>No fee records</h6><p><a href="{% url 'fee_add' %}">Add the first record</a></p>
+          </div>
+        </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const isDark = () => document.documentElement.getAttribute('data-theme') !== 'light';
+const tc = () => isDark() ? '#475569' : '#64748B';
+const collected = {{ fee_collected|default:0 }};
+const due = {{ fee_due|default:0 }};
+const rate = {{ collection_rate|default:0 }};
+
+// Progress radial
+new ApexCharts(document.getElementById('feeProgressChart'), {
+  chart:{type:'bar',height:220,toolbar:{show:false},background:'transparent',fontFamily:'Inter,sans-serif'},
+  series:[{name:'Collected ₹',data:[collected]},{name:'Pending ₹',data:[due]}],
+  xaxis:{categories:['Fee Collection'],labels:{style:{colors:tc()}}},
+  yaxis:{labels:{style:{colors:tc()},formatter:v=>'₹'+v.toLocaleString()}},
+  colors:['#22C55E','#EF4444'],
+  plotOptions:{bar:{horizontal:true,borderRadius:4,dataLabels:{position:'top'}}},
+  dataLabels:{enabled:true,formatter:v=>'₹'+Math.round(v).toLocaleString(),style:{fontSize:'11px',colors:['#fff']}},
+  grid:{borderColor:isDark()?'rgba(59,130,246,0.08)':'#F1F5F9',strokeDashArray:4},
+  legend:{show:true,position:'top',labels:{colors:tc()}},
+  tooltip:{theme:isDark()?'dark':'light',y:{formatter:v=>'₹'+v.toLocaleString()}},
+}).render();
+
+// Status donut
+new ApexCharts(document.getElementById('feeStatusChart'), {
+  chart:{type:'donut',height:180,background:'transparent',fontFamily:'Inter,sans-serif'},
+  series:[{{ paid_count }},{{ pending_count }},{{ overdue_count }}],
+  labels:['Paid','Pending','Overdue'],
+  colors:['#22C55E','#F59E0B','#EF4444'],
+  legend:{show:false},
+  dataLabels:{enabled:false},
+  plotOptions:{pie:{donut:{size:'68%',labels:{show:true,total:{show:true,label:'Total',fontSize:'11px',color:tc()}}}}},
+  tooltip:{theme:isDark()?'dark':'light'},
+}).render();
+</script>
+{% endblock %}

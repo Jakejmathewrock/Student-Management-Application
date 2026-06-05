@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block title %}My Laundry Orders{% endblock %}
+{% block page_title %}My Laundry Orders{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'laundry_portal' %}">Laundry</a></li>
+<li class="breadcrumb-item active">My Orders</li>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h4>My Laundry Orders</h4>
+    <p>{{ orders|length }} order{{ orders|length|pluralize }} total</p>
+  </div>
+  <a href="{% url 'laundry_place_order' %}" class="btn btn-primary">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    New Order
+  </a>
+</div>
+
+{% if orders %}
+<div style="display:flex;flex-direction:column;gap:12px;">
+  {% for order in orders %}
+  <div class="card" style="padding:0;overflow:hidden;">
+    <div style="height:3px;background:{% if order.status == 'delivered' %}var(--c-success){% elif order.status == 'ready' %}var(--c-primary){% elif order.status == 'processing' or order.status == 'collected' %}var(--c-warning){% elif order.status == 'cancelled' %}var(--c-danger){% else %}var(--border){% endif %};"></div>
+    <div style="padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+      <div style="display:flex;align-items:center;gap:16px;">
+        <div style="width:48px;height:48px;border-radius:12px;background:rgba(59,130,246,0.1);display:flex;align-items:center;justify-content:center;font-size:22px;">🧺</div>
+        <div>
+          <div style="font-family:monospace;font-size:14px;font-weight:800;color:var(--c-primary);">{{ order.order_number }}</div>
+          <div style="font-size:12.5px;color:var(--text-500);">{{ order.ordered_at|date:"M d, Y — H:i" }} · {{ order.items.count }} item{{ order.items.count|pluralize }}</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+        <div style="text-align:center;">
+          <div style="font-size:18px;font-weight:800;color:var(--c-success);">₹{{ order.total_amount|floatformat:0 }}</div>
+          <div style="font-size:10.5px;color:var(--text-500);">Total</div>
+        </div>
+        <span class="badge {% if order.status == 'delivered' %}badge-active{% elif order.status == 'ready' %}badge-primary{% elif order.status == 'processing' or order.status == 'collected' %}badge-pending{% elif order.status == 'cancelled' %}badge-overdue{% else %}badge-inactive{% endif %}" style="font-size:12px;">● {{ order.get_status_display }}</span>
+        <span class="badge {% if order.payment_status == 'paid' %}badge-active{% else %}badge-overdue{% endif %}" style="font-size:12px;">💳 {{ order.get_payment_status_display }}</span>
+        <a href="{% url 'laundry_order_detail' order.pk %}" class="btn btn-outline btn-sm">View Details</a>
+      </div>
+    </div>
+    <!-- Items preview -->
+    <div style="padding:0 20px 14px;display:flex;gap:8px;flex-wrap:wrap;">
+      {% for item in order.items.all|slice:":5" %}
+      <span style="background:var(--bg);border:1px solid var(--border);border-radius:50px;padding:3px 10px;font-size:11.5px;color:var(--text-700);">{{ item.service.emoji }} {{ item.service.name }} ×{{ item.quantity }}</span>
+      {% endfor %}
+      {% if order.items.count > 5 %}
+      <span style="background:var(--bg);border:1px solid var(--border);border-radius:50px;padding:3px 10px;font-size:11.5px;color:var(--text-500);">+{{ order.items.count|add:"-5" }} more</span>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card">
+  <div class="empty-state" style="padding:64px 20px;">
+    <div style="font-size:56px;margin-bottom:12px;">🧺</div>
+    <h6>No laundry orders yet</h6>
+    <p style="margin-bottom:16px;">Browse our services and place your first order.</p>
+    <a href="{% url 'laundry_place_order' %}" class="btn btn-primary">Place First Order</a>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

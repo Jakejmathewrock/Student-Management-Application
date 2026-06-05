@@ -1,0 +1,177 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ID Card — {{ student.full_name }}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Inter',sans-serif;background:#0B1120;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;gap:24px;}
+
+    .actions{display:flex;gap:12px;}
+    .btn{padding:10px 20px;border-radius:8px;font-size:13.5px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all .15s;}
+    .btn-print{background:#2563EB;color:#fff;}
+    .btn-print:hover{background:#1D4ED8;}
+    .btn-back{background:rgba(255,255,255,0.08);color:#94A3B8;border:1px solid rgba(255,255,255,0.1);}
+    .btn-back:hover{background:rgba(255,255,255,0.12);color:#fff;}
+
+    /* ── ID Card ── */
+    .id-card{
+      width:340px;border-radius:18px;overflow:hidden;
+      box-shadow:0 24px 64px rgba(0,0,0,0.7),0 0 0 1px rgba(59,130,246,0.2);
+      position:relative;
+    }
+
+    .card-header{
+      background:linear-gradient(135deg,#1E3A8A 0%,#2563EB 60%,#3B82F6 100%);
+      padding:20px 22px 28px;
+      position:relative;overflow:hidden;
+    }
+    .card-header::before{
+      content:'';position:absolute;top:-30px;right:-30px;
+      width:120px;height:120px;border-radius:50%;
+      background:rgba(255,255,255,0.06);
+    }
+    .card-header::after{
+      content:'';position:absolute;bottom:-20px;left:40%;
+      width:160px;height:160px;border-radius:50%;
+      background:rgba(255,255,255,0.04);
+    }
+
+    .inst-name{font-size:13px;font-weight:700;color:rgba(255,255,255,0.9);letter-spacing:0.5px;text-transform:uppercase;}
+    .inst-sub{font-size:10.5px;color:rgba(255,255,255,0.5);letter-spacing:0.3px;margin-top:2px;}
+
+    .card-body{
+      background:#111827;
+      padding:0 22px 22px;
+      position:relative;
+    }
+
+    .photo-wrap{
+      display:flex;justify-content:center;
+      margin-top:-40px;margin-bottom:14px;
+      position:relative;z-index:2;
+    }
+    .photo{
+      width:80px;height:80px;border-radius:50%;
+      object-fit:cover;
+      border:4px solid #111827;
+      box-shadow:0 0 0 3px #2563EB,0 4px 20px rgba(37,99,235,0.4);
+    }
+    .photo-placeholder{
+      width:80px;height:80px;border-radius:50%;
+      background:linear-gradient(135deg,#1E3A8A,#2563EB);
+      display:flex;align-items:center;justify-content:center;
+      font-size:28px;font-weight:800;color:#fff;
+      border:4px solid #111827;
+      box-shadow:0 0 0 3px #2563EB,0 4px 20px rgba(37,99,235,0.4);
+    }
+
+    .student-name{text-align:center;font-size:17px;font-weight:800;color:#F0F6FF;letter-spacing:-0.3px;}
+    .student-id{text-align:center;font-size:11.5px;color:#3B82F6;font-family:monospace;margin-top:3px;letter-spacing:1px;}
+
+    .divider{height:1px;background:rgba(59,130,246,0.15);margin:14px 0;}
+
+    .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    .info-item{}
+    .info-lbl{font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.7px;color:#334155;margin-bottom:3px;}
+    .info-val{font-size:12.5px;font-weight:600;color:#CBD5E1;}
+
+    .badge-row{display:flex;justify-content:center;margin-top:14px;}
+    .status-badge{
+      padding:4px 16px;border-radius:50px;font-size:11px;font-weight:700;letter-spacing:0.5px;
+      background:rgba(34,197,94,0.15);color:#22C55E;border:1px solid rgba(34,197,94,0.3);
+    }
+
+    .card-footer{
+      background:#0D1829;
+      padding:12px 22px;
+      display:flex;align-items:center;justify-content:space-between;
+      border-top:1px solid rgba(59,130,246,0.1);
+    }
+    .footer-text{font-size:9.5px;color:#334155;letter-spacing:0.3px;}
+    .barcode{display:flex;gap:2px;align-items:center;}
+    .bar{width:2px;background:#334155;border-radius:1px;}
+
+    @media print{
+      body{background:#fff;padding:0;}
+      .actions{display:none;}
+      .id-card{box-shadow:none;border:2px solid #1E3A8A;}
+    }
+  </style>
+</head>
+<body>
+
+<div class="actions">
+  <a href="{% url 'student_detail' student.pk %}" class="btn btn-back">← Back to Profile</a>
+  <button onclick="window.print()" class="btn btn-print">🖨 Print ID Card</button>
+  <a href="{% url 'student_id_card_pdf' student.pk %}" class="btn btn-print" style="background:#059669;color:#fff;display:inline-flex;align-items:center;justify-content:center;">📄 Download PDF</a>
+</div>
+
+<div class="id-card">
+
+  <div class="card-header">
+    <div class="inst-name">🎓 EduAdmin University</div>
+    <div class="inst-sub">Official Student Identity Card</div>
+  </div>
+
+  <div class="card-body">
+    <div class="photo-wrap">
+      {% if student.photo %}
+        <img src="{{ student.photo.url }}" class="photo" alt="{{ student.full_name }}"/>
+      {% else %}
+        <div class="photo-placeholder">{{ student.full_name|first|upper }}</div>
+      {% endif %}
+    </div>
+
+    <div class="student-name">{{ student.full_name }}</div>
+    <div class="student-id">{{ student.student_id }}</div>
+
+    <div class="divider"></div>
+
+    <div class="info-grid">
+      <div class="info-item">
+        <div class="info-lbl">Roll Number</div>
+        <div class="info-val">{{ student.roll_number }}</div>
+      </div>
+      <div class="info-item">
+        <div class="info-lbl">Department</div>
+        <div class="info-val">{{ student.department|default:"—" }}</div>
+      </div>
+      <div class="info-item">
+        <div class="info-lbl">Course</div>
+        <div class="info-val">{{ student.course.code|default:"—" }}</div>
+      </div>
+      <div class="info-item">
+        <div class="info-lbl">Year</div>
+        <div class="info-val">{{ student.year_of_admission }}</div>
+      </div>
+      <div class="info-item">
+        <div class="info-lbl">Gender</div>
+        <div class="info-val">{{ student.gender|title }}</div>
+      </div>
+      <div class="info-item">
+        <div class="info-lbl">GPA</div>
+        <div class="info-val">{{ student.gpa }} / 4.0</div>
+      </div>
+    </div>
+
+    <div class="badge-row">
+      <span class="status-badge">● {{ student.status|upper }}</span>
+    </div>
+  </div>
+
+  <div class="card-footer">
+    <div class="footer-text">Valid Academic Year {{ student.year_of_admission }}</div>
+    <div class="barcode">
+      {% for i in "123456789012" %}
+      <div class="bar" style="height:{% cycle '22' '16' '18' '14' '20' '12' '18' '22' '16' '14' '20' '18' %}px;"></div>
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}Add Result{% endblock %}
+{% block page_title %}Add Result{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'result_list' %}">Results</a></li>
+<li class="breadcrumb-item active">Add</li>
+{% endblock %}
+{% block content %}
+<div style="max-width:600px;">
+<form method="POST">{% csrf_token %}
+<div class="form-card">
+  <div class="form-card-header">
+    <div class="form-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg></div>
+    <div><div style="font-size:15px;font-weight:700;color:var(--text-900);">Add Academic Result</div></div>
+  </div>
+  <div class="form-section">
+    <div class="form-grid">
+      <div><label class="field-label required">Student</label>{{ form.student }}</div>
+      <div><label class="field-label required">Course</label>{{ form.course }}</div>
+      <div><label class="field-label required">Semester</label>{{ form.semester }}</div>
+      <div><label class="field-label required">Marks Obtained</label>{{ form.marks_obtained }}</div>
+      <div><label class="field-label">Total Marks</label>{{ form.total_marks }}</div>
+      <div><label class="field-label">Grade</label>{{ form.grade }}</div>
+      <div class="form-full"><label class="field-label">Remarks</label>{{ form.remarks }}</div>
+    </div>
+  </div>
+  <div class="form-footer">
+    <a href="{% url 'result_list' %}" class="btn btn-secondary">Cancel</a>
+    <button type="submit" class="btn btn-primary">Save Result</button>
+  </div>
+</div>
+</form>
+</div>
+{% endblock %}
+{% block extra_css %}<style>.form-card input,.form-card select,.form-card textarea{width:100%;padding:8px 11px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-900);font-size:13px;font-family:inherit;outline:none;transition:var(--transition);}.form-card input:focus,.form-card select:focus,.form-card textarea:focus{border-color:var(--c-primary);box-shadow:0 0 0 3px rgba(37,99,235,.1);}.form-card textarea{min-height:60px;resize:vertical;}</style>{% endblock %}

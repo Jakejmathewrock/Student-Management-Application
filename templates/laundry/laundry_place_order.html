@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+{% block title %}Place Laundry Order{% endblock %}
+{% block page_title %}Place Laundry Order{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'laundry_portal' %}">Laundry</a></li>
+<li class="breadcrumb-item active">Place Order</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.svc-row { display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border); }
+.svc-row:last-child { border-bottom:none; }
+.svc-info { flex:1; }
+.svc-name { font-size:13.5px; font-weight:600; color:var(--text-900); }
+.svc-desc { font-size:11.5px; color:var(--text-500); margin-top:2px; }
+.svc-price { font-size:14px; font-weight:700; color:var(--c-success); margin-right:16px; white-space:nowrap; }
+.qty-box { display:flex; align-items:center; gap:8px; }
+.qty-btn { width:28px; height:28px; border-radius:6px; border:1px solid var(--border); background:var(--bg-card); color:var(--text-900); font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:var(--transition); }
+.qty-btn:hover { border-color:var(--c-primary); color:var(--c-primary); }
+.qty-input { width:44px; text-align:center; border:1px solid var(--border); border-radius:6px; padding:4px; background:var(--bg-card); color:var(--text-900); font-size:13.5px; font-weight:700; }
+.cat-section { margin-bottom:24px; }
+.cat-label { font-size:13px; font-weight:700; color:var(--c-primary); text-transform:uppercase; letter-spacing:.6px; margin-bottom:8px; display:flex; align-items:center; gap:8px; }
+.order-summary { position:sticky; top:80px; }
+.total-row { display:flex; justify-content:space-between; font-size:13.5px; padding:6px 0; }
+.total-final { font-size:18px; font-weight:800; color:var(--c-success); }
+</style>
+{% endblock %}
+
+{% block content %}
+<form method="POST" id="orderForm">
+{% csrf_token %}
+<div style="display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start;">
+
+  <!-- Left: Service Selection -->
+  <div>
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-header">
+        <span class="card-title">🧺 Select Laundry Services</span>
+        <span class="badge badge-primary" id="itemsBadge">0 items</span>
+      </div>
+      <div class="card-body" style="padding:0 20px;">
+        {% regroup services by get_category_display as service_groups %}
+        {% for group in service_groups %}
+        <div class="cat-section">
+          <div class="cat-label" style="padding-top:16px;border-top:1px solid var(--border);margin-top:8px;">
+            {{ group.list.0.emoji }} {{ group.grouper }}
+          </div>
+          {% for svc in group.list %}
+          <div class="svc-row">
+            <div class="svc-info">
+              <div class="svc-name">{{ svc.name }}</div>
+              {% if svc.description %}<div class="svc-desc">{{ svc.description }}</div>{% endif %}
+              <div style="font-size:11px;color:var(--text-500);margin-top:2px;">⏱ Ready in {{ svc.turnaround_hrs }}h</div>
+            </div>
+            <div class="svc-price">₹{{ svc.price_per_item }}<span style="font-size:10.5px;font-weight:400;color:var(--text-500);"> /{{ svc.unit }}</span></div>
+            <div class="qty-box">
+              <button type="button" class="qty-btn" onclick="changeQty({{ svc.pk }}, -1)">−</button>
+              <input type="number" name="qty_{{ svc.pk }}" id="qty_{{ svc.pk }}"
+                     class="qty-input" value="0" min="0" max="50"
+                     data-price="{{ svc.price_per_item }}" data-name="{{ svc.name }}"
+                     onchange="recalculate()"/>
+              <button type="button" class="qty-btn" onclick="changeQty({{ svc.pk }}, 1)">＋</button>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Pickup Details -->
+    <div class="card">
+      <div class="card-header"><span class="card-title">📍 Pickup & Delivery Details</span></div>
+      <div class="card-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+          <div>
+            <label class="field-label required">Room Number</label>
+            <input type="text" name="room_number" class="field-input" placeholder="e.g. B-204" required/>
+          </div>
+          <div>
+            <label class="field-label">Pickup Date</label>
+            <input type="date" name="pickup_date" class="field-input"/>
+          </div>
+          <div style="grid-column:1/-1;">
+            <label class="field-label">Special Instructions</label>
+            <textarea name="special_instructions" class="field-input" style="min-height:60px;resize:vertical;" placeholder="e.g. Handle with care, avoid bleach on coloured items..."></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Order Summary -->
+  <div class="order-summary">
+    <div class="card">
+      <div class="card-header"><span class="card-title">🧾 Order Summary</span></div>
+      <div class="card-body">
+        <div id="summaryItems" style="min-height:60px;margin-bottom:12px;">
+          <div style="text-align:center;color:var(--text-500);font-size:13px;padding:12px 0;">Select items to see summary</div>
+        </div>
+        <div style="border-top:2px solid var(--border);padding-top:12px;">
+          <div class="total-row"><span style="color:var(--text-500);">Subtotal</span><span id="subtotalAmt">₹0</span></div>
+          <div class="total-row"><span style="color:var(--text-500);">Service Charge</span><span>₹0</span></div>
+          <div class="total-row" style="border-top:1px solid var(--border);padding-top:8px;margin-top:4px;">
+            <span style="font-weight:700;">Total</span>
+            <span class="total-final" id="totalAmt">₹0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payment -->
+    <div class="card" style="margin-top:14px;">
+      <div class="card-header"><span class="card-title">💳 UPI Payment</span></div>
+      <div class="card-body">
+        <div style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:8px;padding:12px;margin-bottom:14px;font-size:12.5px;color:var(--text-500);">
+          Pay to: <strong style="color:var(--c-success);">laundry@eduadmin</strong><br/>
+          Amount will be deducted at order placement.
+        </div>
+        <label class="field-label required">Your UPI ID</label>
+        <input type="text" name="upi_id" class="field-input" placeholder="yourname@paytm or @upi" required/>
+        <div style="margin-top:6px;font-size:11.5px;color:var(--text-500);">e.g. 9876543210@upi, name@paytm, name@ybl</div>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:12px;padding:12px;font-size:14.5px;font-weight:700;" id="placeBtn" disabled>
+      🧺 Place Order & Pay
+    </button>
+    <a href="{% url 'laundry_portal' %}" class="btn btn-secondary" style="width:100%;justify-content:center;margin-top:8px;">Cancel</a>
+  </div>
+
+</div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const prices = {};
+document.querySelectorAll('.qty-input').forEach(inp => {
+  prices[inp.id] = { price: parseFloat(inp.dataset.price), name: inp.dataset.name };
+});
+
+function changeQty(id, delta) {
+  const inp = document.getElementById('qty_' + id);
+  const val = Math.max(0, Math.min(50, parseInt(inp.value || 0) + delta));
+  inp.value = val;
+  recalculate();
+}
+
+function recalculate() {
+  let total = 0;
+  let itemCount = 0;
+  let summaryHTML = '';
+
+  Object.keys(prices).forEach(key => {
+    const inp = document.getElementById(key);
+    const qty = parseInt(inp.value || 0);
+    if (qty > 0) {
+      const sub = prices[key].price * qty;
+      total += sub;
+      itemCount += qty;
+      summaryHTML += `<div style="display:flex;justify-content:space-between;font-size:12.5px;padding:5px 0;border-bottom:1px solid var(--border);">
+        <span style="color:var(--text-700);">${prices[key].name} ×${qty}</span>
+        <span style="font-weight:600;">₹${sub.toFixed(0)}</span>
+      </div>`;
+    }
+  });
+
+  document.getElementById('summaryItems').innerHTML = summaryHTML ||
+    '<div style="text-align:center;color:var(--text-500);font-size:13px;padding:12px 0;">No items selected</div>';
+  document.getElementById('subtotalAmt').textContent = '₹' + total.toFixed(0);
+  document.getElementById('totalAmt').textContent = '₹' + total.toFixed(0);
+  document.getElementById('itemsBadge').textContent = itemCount + ' item' + (itemCount !== 1 ? 's' : '');
+
+  const btn = document.getElementById('placeBtn');
+  btn.disabled = itemCount === 0;
+  btn.style.opacity = itemCount === 0 ? '0.5' : '1';
+}
+</script>
+{% endblock %}

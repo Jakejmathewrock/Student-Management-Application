@@ -1,0 +1,93 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Hall Ticket — {{ app.student.full_name }}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Inter',sans-serif;background:#0B1120;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;gap:20px;}
+    .actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;}
+    .btn{padding:10px 20px;border-radius:8px;font-size:13.5px;font-weight:600;cursor:pointer;border:none;font-family:inherit;text-decoration:none;display:inline-block;}
+    .btn-print{background:#2563EB;color:#fff;}
+    .btn-print:hover{background:#1D4ED8;}
+    .btn-back{background:rgba(255,255,255,0.08);color:#94A3B8;border:1px solid rgba(255,255,255,0.1);}
+    .btn-back:hover{background:rgba(255,255,255,0.12);color:#fff;}
+    .ticket{width:420px;border-radius:16px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.7),0 0 0 1px rgba(34,197,94,0.25);background:#fff;}
+    .ticket-header{background:linear-gradient(135deg,#14532D 0%,#16A34A 50%,#22C55E 100%);padding:20px 24px;color:#fff;position:relative;}
+    .ticket-header h1{font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;opacity:.85;}
+    .ticket-header h2{font-size:20px;font-weight:800;margin-top:4px;}
+    .ticket-no{position:absolute;top:20px;right:24px;text-align:right;}
+    .ticket-no span{display:block;font-size:10px;opacity:.8;text-transform:uppercase;}
+    .ticket-no strong{font-size:14px;font-family:monospace;letter-spacing:1px;}
+    .ticket-body{padding:24px;color:#111827;}
+    .row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px dashed #E5E7EB;font-size:13px;}
+    .row:last-child{border-bottom:none;}
+    .row label{color:#6B7280;font-size:11px;text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:2px;}
+    .row span{font-weight:600;}
+    .fee-box{margin-top:16px;padding:12px 16px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;text-align:center;}
+    .fee-box .amount{font-size:24px;font-weight:800;color:#16A34A;}
+    .fee-box .label{font-size:11px;color:#6B7280;margin-top:2px;}
+    .footer{padding:12px 24px;background:#F9FAFB;font-size:10px;color:#9CA3AF;text-align:center;border-top:1px solid #E5E7EB;}
+    @media print{
+      body{background:#fff;padding:0;}
+      .actions{display:none;}
+      .ticket{box-shadow:none;width:100%;max-width:420px;}
+    }
+  </style>
+</head>
+<body>
+  <div class="actions">
+    <button class="btn btn-print" onclick="window.print()">🖨 Print Hall Ticket</button>
+    <a href="{% url 'exam_hall_ticket_pdf' app.pk %}" class="btn btn-print" style="background:#059669;color:#fff;">📄 Download PDF</a>
+    <a href="{% url 'exam_application_status' app.pk %}" class="btn btn-back">← Back</a>
+  </div>
+
+  <div class="ticket">
+    <div class="ticket-header">
+      <div class="ticket-no">
+        <span>Hall Ticket No.</span>
+        <strong>{{ app.hall_ticket_no }}</strong>
+      </div>
+      <h1>EduAdmin Pro</h1>
+      <h2>Examination Hall Ticket</h2>
+    </div>
+    <div class="ticket-body">
+      <div class="row">
+        <div><label>Student Name</label><span>{{ app.student.full_name }}</span></div>
+        <div style="text-align:right;"><label>Roll No.</label><span>{{ app.student.roll_number }}</span></div>
+      </div>
+      <div class="row">
+        <div style="flex:1;"><label>Exam</label><span>{{ app.exam.title }}</span></div>
+      </div>
+      <div class="row">
+        <div><label>Exam Type</label><span>{{ app.exam.get_exam_type_display }}</span></div>
+        <div style="text-align:right;"><label>Date</label><span>{{ app.exam.exam_date|date:"d M Y" }}</span></div>
+      </div>
+      <div class="row">
+        <div><label>Time</label><span>{{ app.exam.start_time|time:"H:i" }} – {{ app.exam.end_time|time:"H:i" }}</span></div>
+        <div style="text-align:right;"><label>Venue</label><span>{{ app.exam.venue|default:"TBA" }}</span></div>
+      </div>
+      <div class="row">
+        <div><label>Department</label><span>{{ app.student.department|default:"—" }}</span></div>
+        <div style="text-align:right;"><label>Transaction ID</label><span style="font-family:monospace;font-size:11px;">{{ app.transaction_id|default:"—" }}</span></div>
+      </div>
+
+      <div class="fee-box">
+        {% if app.fee_paid > 0 %}
+        <div class="amount">₹{{ app.fee_paid|floatformat:0 }}</div>
+        <div class="label">Exam Fee — {{ app.get_payment_status_display }}</div>
+        {% else %}
+        <div class="amount" style="font-size:16px;color:#2563EB;">Fee Waived</div>
+        <div class="label">{{ app.get_payment_status_display }}</div>
+        {% endif %}
+      </div>
+    </div>
+    <div class="footer">
+      Bring this hall ticket and a valid ID to the exam venue. Issued {{ app.applied_at|date:"d M Y" }} · EduAdmin Pro
+    </div>
+  </div>
+</body>
+</html>

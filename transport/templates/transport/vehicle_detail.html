@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}{{ vehicle.vehicle_number }}{% endblock %}
+{% block page_title %}Vehicle Detail{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'transport_dashboard' %}">Transport</a></li>
+<li class="breadcrumb-item"><a href="{% url 'vehicle_list' %}">Vehicles</a></li>
+<li class="breadcrumb-item active">{{ vehicle.vehicle_number }}</li>
+{% endblock %}
+{% block content %}
+<div style="display:grid;grid-template-columns:280px 1fr;gap:16px;">
+  <div class="card" style="padding:20px;text-align:center;">
+    {% if vehicle.photo %}<img src="{{ vehicle.photo.url }}" style="width:100%;border-radius:8px;margin-bottom:14px;" alt=""/>{% endif %}
+    <div style="font-family:monospace;font-size:20px;font-weight:900;color:var(--c-primary);">{{ vehicle.vehicle_number }}</div>
+    <div style="font-size:14px;font-weight:700;color:var(--text-900);margin:4px 0 8px;">{{ vehicle.make_model }}</div>
+    <span class="badge {% if vehicle.status == 'active' %}badge-active{% elif vehicle.status == 'maintenance' %}badge-pending{% elif vehicle.status == 'breakdown' %}badge-overdue{% else %}badge-inactive{% endif %}">● {{ vehicle.get_status_display }}</span>
+    <div style="margin-top:14px;font-size:12.5px;color:var(--text-500);text-align:left;display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--border);padding-top:12px;">
+      <div>🪑 {{ vehicle.seating_capacity }} seats</div>
+      <div>⛽ {{ vehicle.get_fuel_type_display }}</div>
+      <div>📏 {{ vehicle.manufacturing_year }}</div>
+      <div>🛣 {{ vehicle.current_odometer }} km</div>
+      {% if vehicle.current_route %}<div>🗺 Route: {{ vehicle.current_route.route_number }}</div>{% endif %}
+      {% if vehicle.assigned_driver %}<div>👤 {{ vehicle.assigned_driver.full_name }}</div>{% endif %}
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px;">
+      <a href="{% url 'vehicle_edit' vehicle.pk %}" class="btn btn-primary" style="flex:1;justify-content:center;font-size:12px;">✏ Edit</a>
+      <a href="{% url 'vehicle_delete' vehicle.pk %}" class="btn btn-outline" style="flex:1;justify-content:center;font-size:12px;color:var(--c-danger);" data-confirm-href="{% url 'vehicle_delete' vehicle.pk %}" data-confirm-message="Delete this vehicle?">🗑</a>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:14px;">
+    <div class="card">
+      <div class="card-header"><span class="card-title">📋 Vehicle Information</span></div>
+      <div class="card-body">
+        <div class="info-row">
+          <div class="info-item"><div class="info-label">Chassis No.</div><div class="info-value" style="font-family:monospace;">{{ vehicle.chassis_number }}</div></div>
+          <div class="info-item"><div class="info-label">Engine No.</div><div class="info-value" style="font-family:monospace;">{{ vehicle.engine_number }}</div></div>
+          <div class="info-item"><div class="info-label">Registration Expiry</div><div class="info-value"><span class="badge {% if vehicle.is_registration_valid %}badge-active{% else %}badge-overdue{% endif %}">{{ vehicle.registration_expiry|date:"M d, Y" }}</span></div></div>
+          <div class="info-item"><div class="info-label">Insurance Expiry</div><div class="info-value"><span class="badge {% if vehicle.is_insurance_valid %}badge-active{% else %}badge-overdue{% endif %}">{{ vehicle.insurance_expiry|date:"M d, Y"|default:"—" }}</span></div></div>
+          <div class="info-item"><div class="info-label">Fitness Expiry</div><div class="info-value"><span class="badge {% if vehicle.is_fitness_valid %}badge-active{% else %}badge-overdue{% endif %}">{{ vehicle.fitness_expiry|date:"M d, Y"|default:"—" }}</span></div></div>
+          <div class="info-item"><div class="info-label">GPS</div><div class="info-value">{% if vehicle.gps_enabled %}<span class="badge badge-active">📡 Enabled</span>{% else %}<span class="badge badge-inactive">Off</span>{% endif %}</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">🔧 Maintenance Records</span><a href="{% url 'maintenance_add' %}" class="btn btn-sm btn-outline">+ Add</a></div>
+      <div class="table-wrap"><table class="data-table">
+        <thead><tr><th>Type</th><th>Date</th><th>Cost</th><th>Status</th></tr></thead>
+        <tbody>
+          {% for m in maintenance_records %}
+          <tr>
+            <td style="font-weight:500;">{{ m.get_maintenance_type_display }}</td>
+            <td style="font-size:12px;color:var(--text-500);">{{ m.scheduled_date|date:"M d, Y" }}</td>
+            <td style="font-weight:600;color:var(--c-warning);">₹{{ m.cost|floatformat:0 }}</td>
+            <td><span class="badge {% if m.status == 'completed' %}badge-active{% elif m.status == 'in_progress' %}badge-pending{% elif m.status == 'scheduled' %}badge-primary{% else %}badge-inactive{% endif %}">{{ m.get_status_display }}</span></td>
+          </tr>
+          {% empty %}<tr><td colspan="4" style="text-align:center;color:var(--text-500);padding:20px;font-size:12.5px;">No maintenance records</td></tr>{% endfor %}
+        </tbody>
+      </table></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">🚌 Recent Trips</span></div>
+      <div class="table-wrap"><table class="data-table">
+        <thead><tr><th>Date</th><th>Route</th><th>Driver</th><th>Distance</th><th>Status</th></tr></thead>
+        <tbody>
+          {% for trip in trips %}
+          <tr>
+            <td style="font-size:12px;">{{ trip.trip_date|date:"M d, Y" }}</td>
+            <td><span class="badge badge-primary">{{ trip.route.route_number }}</span></td>
+            <td style="font-size:12.5px;color:var(--text-500);">{{ trip.driver.full_name|truncatechars:18 }}</td>
+            <td style="font-size:12.5px;">{{ trip.distance_covered }} km</td>
+            <td><span class="badge {% if trip.status == 'completed' %}badge-active{% elif trip.status == 'in_transit' %}badge-pending{% else %}badge-primary{% endif %}">{{ trip.get_status_display }}</span></td>
+          </tr>
+          {% empty %}<tr><td colspan="5" style="text-align:center;color:var(--text-500);padding:20px;font-size:12.5px;">No trips yet</td></tr>{% endfor %}
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+</div>
+{% endblock %}

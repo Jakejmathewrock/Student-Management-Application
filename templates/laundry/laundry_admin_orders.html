@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% block title %}Laundry Orders — Admin{% endblock %}
+{% block page_title %}Laundry Orders{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+<li class="breadcrumb-item active">Laundry Orders</li>
+{% endblock %}
+
+{% block content %}
+<!-- Summary KPIs -->
+<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:20px;">
+  <div class="kpi-card" style="--kpi-color:#3B82F6;--kpi-bg:rgba(59,130,246,0.1);padding:14px 16px;">
+    <div class="kpi-value" style="font-size:22px;">{{ summary.total }}</div>
+    <div class="kpi-label">Total Orders</div>
+  </div>
+  <div class="kpi-card" style="--kpi-color:#64748B;--kpi-bg:rgba(100,116,139,0.1);padding:14px 16px;">
+    <div class="kpi-value" style="font-size:22px;color:var(--text-500);">{{ summary.placed }}</div>
+    <div class="kpi-label">New / Placed</div>
+  </div>
+  <div class="kpi-card" style="--kpi-color:#F59E0B;--kpi-bg:rgba(245,158,11,0.1);padding:14px 16px;">
+    <div class="kpi-value" style="font-size:22px;color:var(--c-warning);">{{ summary.processing }}</div>
+    <div class="kpi-label">Processing</div>
+  </div>
+  <div class="kpi-card" style="--kpi-color:#3B82F6;--kpi-bg:rgba(59,130,246,0.1);padding:14px 16px;">
+    <div class="kpi-value" style="font-size:22px;color:var(--c-primary);">{{ summary.ready }}</div>
+    <div class="kpi-label">Ready</div>
+  </div>
+  <div class="kpi-card" style="--kpi-color:#22C55E;--kpi-bg:rgba(34,197,94,0.1);padding:14px 16px;">
+    <div class="kpi-value" style="font-size:22px;color:var(--c-success);">{{ summary.delivered }}</div>
+    <div class="kpi-label">Delivered</div>
+  </div>
+  <div class="kpi-card" style="--kpi-color:#22C55E;--kpi-bg:rgba(34,197,94,0.1);padding:14px 16px;">
+    <div class="kpi-value" style="font-size:22px;color:var(--c-success);">₹{{ summary.revenue|floatformat:0 }}</div>
+    <div class="kpi-label">Revenue</div>
+  </div>
+</div>
+
+<!-- Filters + Table -->
+<div class="page-header" style="margin-bottom:12px;">
+  <div><h4>All Orders</h4></div>
+  <div style="display:flex;gap:8px;">
+    <a href="{% url 'laundry_orders_export_pdf' %}" class="btn btn-primary">📄 Export PDF Report</a>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom:16px;padding:16px;">
+  <form method="GET" style="display:flex;flex-wrap:wrap;gap:12px;align-items:end;margin:0;">
+    <div style="flex:1;min-width:200px;">
+      <label class="field-label" style="font-size:12px;font-weight:600;margin-bottom:4px;display:block;">Search Order</label>
+      <input type="text" name="query" value="{{ query }}" placeholder="Student name, roll, order number..." style="width:100%;height:36px;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;background:inherit;color:inherit;"/>
+    </div>
+    <div style="min-width:140px;">
+      <label class="field-label" style="font-size:12px;font-weight:600;margin-bottom:4px;display:block;">Order Status</label>
+      <select name="status" style="width:100%;height:36px;padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;background:inherit;color:inherit;">
+        <option value="">All Statuses</option>
+        {% for val, label in status_choices %}
+        <option value="{{ val }}" {% if status_filter == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div style="min-width:140px;">
+      <label class="field-label" style="font-size:12px;font-weight:600;margin-bottom:4px;display:block;">Payment</label>
+      <select name="payment" style="width:100%;height:36px;padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;background:inherit;color:inherit;">
+        <option value="">All Payments</option>
+        {% for val, label in payment_choices %}
+        <option value="{{ val }}" {% if payment_filter == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <button type="submit" class="btn btn-primary" style="height:36px;padding:0 16px;">Search</button>
+    </div>
+    <div>
+      <a href="{% url 'laundry_admin_orders' %}" class="btn btn-outline" style="height:36px;padding:0 16px;display:inline-flex;align-items:center;">Reset</a>
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Order #</th>
+          <th>Student</th>
+          <th>Room</th>
+          <th>Items</th>
+          <th>Amount</th>
+          <th>Payment</th>
+          <th>Date</th>
+          <th>Status</th>
+          <th style="text-align:right;">Update</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for order in orders %}
+        <tr>
+          <td>
+            <a href="{% url 'laundry_order_detail' order.pk %}" style="font-family:monospace;font-weight:700;color:var(--c-primary);">{{ order.order_number }}</a>
+          </td>
+          <td>
+            <div class="cell-user">
+              <div class="cell-avatar-placeholder">{{ order.student.full_name|first|upper }}</div>
+              <div>
+                <div class="cell-name">{{ order.student.full_name }}</div>
+                <div class="cell-sub">{{ order.student.roll_number }}</div>
+              </div>
+            </div>
+          </td>
+          <td style="font-size:12.5px;color:var(--text-500);">{{ order.room_number|default:"—" }}</td>
+          <td style="font-size:13px;font-weight:600;">{{ order.items.count }}</td>
+          <td style="font-weight:700;color:var(--c-success);">₹{{ order.total_amount|floatformat:0 }}</td>
+          <td><span class="badge {% if order.payment_status == 'paid' %}badge-active{% else %}badge-overdue{% endif %}">{{ order.get_payment_status_display }}</span></td>
+          <td style="font-size:12px;color:var(--text-500);">{{ order.ordered_at|date:"M d, H:i" }}</td>
+          <td>
+            <span class="badge {% if order.status == 'delivered' %}badge-active{% elif order.status == 'ready' %}badge-primary{% elif order.status == 'processing' or order.status == 'collected' %}badge-pending{% elif order.status == 'cancelled' %}badge-overdue{% else %}badge-inactive{% endif %}">
+              ● {{ order.get_status_display }}
+            </span>
+          </td>
+          <td>
+            <form method="POST" style="display:flex;gap:4px;justify-content:flex-end;">
+              {% csrf_token %}
+              <input type="hidden" name="order_id" value="{{ order.pk }}"/>
+              <select name="new_status" style="padding:4px 8px;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;color:var(--text-900);font-size:12px;outline:none;">
+                {% for val, label in status_choices %}
+                <option value="{{ val }}" {% if order.status == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+              <button type="submit" class="btn btn-sm btn-primary" style="padding:4px 10px;font-size:11.5px;">✓</button>
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="9">
+          <div class="empty-state"><div style="font-size:48px;margin-bottom:8px;">🧺</div><h6>No orders yet</h6></div>
+        </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

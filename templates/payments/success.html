@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}Payment Successful{% endblock %}
+{% block content %}
+<div style="max-width:560px;margin:0 auto;text-align:center;">
+  <div class="card" style="padding:48px 36px;">
+    <div style="width:80px;height:80px;border-radius:50%;background:rgba(34,197,94,0.15);border:3px solid var(--c-success);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:popIn .4s ease;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="2.5" width="38" height="38"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <h2 style="font-size:24px;font-weight:800;color:var(--text-900);margin-bottom:6px;">Payment Successful! 🎉</h2>
+    <p style="color:var(--text-500);font-size:14px;margin-bottom:24px;">Your fee payment has been processed and confirmed.</p>
+
+    <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:24px;text-align:left;">
+      <div style="display:flex;flex-direction:column;gap:10px;font-size:13.5px;">
+        <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-500);">Receipt No.</span><strong style="font-family:monospace;color:var(--c-primary);">{{ txn.receipt_number }}</strong></div>
+        <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-500);">Amount Paid</span><strong style="font-size:18px;color:var(--c-success);">₹{{ txn.amount|floatformat:0 }}</strong></div>
+        <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-500);">Payment Method</span><span class="badge badge-primary">{{ txn.get_method_display }}</span></div>
+        <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-500);">Transaction Ref</span><span style="font-family:monospace;font-size:12px;">{{ txn.transaction_ref|default:txn.razorpay_payment_id|default:"—" }}</span></div>
+        <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-500);">Paid At</span><span>{{ txn.paid_at|date:"M d, Y — H:i"|default:"Just now" }}</span></div>
+        <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-500);">Student</span><strong>{{ txn.fee_record.student.full_name }}</strong></div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;justify-content:center;">
+      <a href="{% url 'payment_receipt_pdf' txn.pk %}" class="btn btn-primary" style="font-weight:700;">⬇ Download Receipt PDF</a>
+      <a href="{% url 'payment_dashboard' %}" class="btn btn-secondary">Back to Payments</a>
+    </div>
+  </div>
+</div>
+
+{% block extra_css %}
+<style>@keyframes popIn{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}</style>
+{% endblock %}
+{% endblock %}

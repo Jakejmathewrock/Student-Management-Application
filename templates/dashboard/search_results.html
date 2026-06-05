@@ -1,0 +1,348 @@
+{% extends 'base.html' %}
+{% block title %}Search Results — "{{ query }}"{% endblock %}
+{% block page_title %}Global Search{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+<li class="breadcrumb-item active">Search Results</li>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h4>🔎 Search Results for "{{ query }}"</h4>
+    <p class="text-sm text-slate-500">Found {{ total_count }} matching item{{ total_count|pluralize }}</p>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-3">
+    <!-- Category Tabs Selector (sidebar menu style) -->
+    <div class="card" style="padding:12px; margin-bottom:16px;">
+      <div style="font-size:12px; font-weight:700; text-transform:uppercase; color:var(--text-500); padding:8px 12px; letter-spacing:0.5px;">Categories</div>
+      <div style="display:flex; flex-direction:column; gap:4px; margin-top:8px;">
+        <button class="tab-btn active" onclick="switchSearchTab('all')" id="tab-all-btn" style="text-align:left; padding:10px 14px; border-radius:6px; font-size:13.5px; font-weight:600; display:flex; justify-content:space-between; align-items:center; background:rgba(37,99,235,0.1); color:var(--c-primary);">
+          <span>🌐 All Results</span>
+          <span class="badge badge-primary">{{ total_count }}</span>
+        </button>
+        <button class="tab-btn" onclick="switchSearchTab('students')" id="tab-students-btn" style="text-align:left; padding:10px 14px; border-radius:6px; font-size:13.5px; font-weight:600; display:flex; justify-content:space-between; align-items:center; background:transparent; color:var(--text-600);">
+          <span>🎓 Students</span>
+          <span class="badge badge-cyan">{{ students|length }}</span>
+        </button>
+        <button class="tab-btn" onclick="switchSearchTab('teachers')" id="tab-teachers-btn" style="text-align:left; padding:10px 14px; border-radius:6px; font-size:13.5px; font-weight:600; display:flex; justify-content:space-between; align-items:center; background:transparent; color:var(--text-600);">
+          <span>👨‍🏫 Teachers</span>
+          <span class="badge badge-purple">{{ teachers|length }}</span>
+        </button>
+        <button class="tab-btn" onclick="switchSearchTab('courses')" id="tab-courses-btn" style="text-align:left; padding:10px 14px; border-radius:6px; font-size:13.5px; font-weight:600; display:flex; justify-content:space-between; align-items:center; background:transparent; color:var(--text-600);">
+          <span>📖 Courses</span>
+          <span class="badge badge-active">{{ courses|length }}</span>
+        </button>
+        <button class="tab-btn" onclick="switchSearchTab('notices')" id="tab-notices-btn" style="text-align:left; padding:10px 14px; border-radius:6px; font-size:13.5px; font-weight:600; display:flex; justify-content:space-between; align-items:center; background:transparent; color:var(--text-600);">
+          <span>🔔 Notices</span>
+          <span class="badge badge-pending">{{ notices|length }}</span>
+        </button>
+        <button class="tab-btn" onclick="switchSearchTab('routes')" id="tab-routes-btn" style="text-align:left; padding:10px 14px; border-radius:6px; font-size:13.5px; font-weight:600; display:flex; justify-content:space-between; align-items:center; background:transparent; color:var(--text-600);">
+          <span>🚌 Transport Routes</span>
+          <span class="badge badge-cyan">{{ routes|length }}</span>
+        </button>
+        <button class="tab-btn" onclick="switchSearchTab('books')" id="tab-books-btn" style="text-align:left; padding:10px 14px; border-radius:6px; font-size:13.5px; font-weight:600; display:flex; justify-content:space-between; align-items:center; background:transparent; color:var(--text-600);">
+          <span>📚 Library Books</span>
+          <span class="badge badge-primary">{{ books|length }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-9">
+    <!-- Results Panels -->
+    
+    <!-- ── 1. Students Results ── -->
+    <div class="search-panel" id="panel-students" style="margin-bottom:20px;">
+      <div class="card">
+        <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+          <span class="card-title">🎓 Matching Students</span>
+          <span class="badge badge-active">{{ students|length }} found</span>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Student</th>
+                <th>Roll No</th>
+                <th>Department</th>
+                <th>GPA</th>
+                <th>Status</th>
+                <th style="text-align:right;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for s in students %}
+              <tr>
+                <td>
+                  <div class="cell-user">
+                    {% if s.photo %}
+                      <img src="{{ s.photo.url }}" class="cell-avatar" alt=""/>
+                    {% else %}
+                      <div class="cell-avatar-placeholder">{{ s.full_name|first|upper }}</div>
+                    {% endif %}
+                    <div>
+                      <div class="cell-name">{{ s.full_name }}</div>
+                      <div class="cell-sub">{{ s.student_id }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td style="font-family:monospace; font-size:13px;">{{ s.roll_number }}</td>
+                <td style="font-size:13px; color:var(--text-500);">{{ s.department.name|default:"—" }}</td>
+                <td style="font-weight:600; font-size:13px;">{{ s.gpa }}</td>
+                <td><span class="badge badge-{{ s.status }}">● {{ s.status|title }}</span></td>
+                <td style="text-align:right;">
+                  <a href="{% url 'student_detail' s.pk %}" class="btn btn-sm btn-outline">Profile</a>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="6" style="text-align:center; padding:20px; color:var(--text-500);">No students found.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 2. Teachers Results ── -->
+    <div class="search-panel" id="panel-teachers" style="margin-bottom:20px;">
+      <div class="card">
+        <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+          <span class="card-title">👨‍🏫 Matching Teachers</span>
+          <span class="badge badge-active">{{ teachers|length }} found</span>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Teacher</th>
+                <th>Department</th>
+                <th>Subjects</th>
+                <th>Email</th>
+                <th style="text-align:right;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for t in teachers %}
+              <tr>
+                <td>
+                  <div class="cell-user">
+                    {% if t.photo %}
+                      <img src="{{ t.photo.url }}" class="cell-avatar" alt=""/>
+                    {% else %}
+                      <div class="cell-avatar-placeholder">{{ t.name|first|upper }}</div>
+                    {% endif %}
+                    <div>
+                      <div class="cell-name">{{ t.name }}</div>
+                      <div class="cell-sub">{{ t.designation }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td style="font-size:13px; color:var(--text-500);">{{ t.department.name|default:"—" }}</td>
+                <td style="font-size:13px; font-weight:500;">{{ t.subjects_handling|default:"—" }}</td>
+                <td style="font-size:12.5px; color:var(--text-500);">{{ t.email }}</td>
+                <td style="text-align:right;">
+                  <a href="{% url 'teacher_list' %}" class="btn btn-sm btn-outline">View Directory</a>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="5" style="text-align:center; padding:20px; color:var(--text-500);">No teachers found.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 3. Courses Results ── -->
+    <div class="search-panel" id="panel-courses" style="margin-bottom:20px;">
+      <div class="card">
+        <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+          <span class="card-title">📖 Matching Courses</span>
+          <span class="badge badge-active">{{ courses|length }} found</span>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Course Name</th>
+                <th>Department</th>
+                <th>Credits</th>
+                <th style="text-align:right;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for c in courses %}
+              <tr>
+                <td style="font-family:monospace; font-weight:700; color:var(--c-primary);">{{ c.code }}</td>
+                <td style="font-weight:600; font-size:13px;">{{ c.name }}</td>
+                <td style="font-size:13px; color:var(--text-500);">{{ c.department.name|default:"—" }}</td>
+                <td>{{ c.credits }} credits</td>
+                <td style="text-align:right;">
+                  <a href="{% url 'course_list' %}" class="btn btn-sm btn-outline">Courses</a>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="5" style="text-align:center; padding:20px; color:var(--text-500);">No courses found.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 4. Notices Results ── -->
+    <div class="search-panel" id="panel-notices" style="margin-bottom:20px;">
+      <div class="card">
+        <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+          <span class="card-title">🔔 Matching Notices</span>
+          <span class="badge badge-active">{{ notices|length }} found</span>
+        </div>
+        <div style="padding:14px; display:flex; flex-direction:column; gap:12px;">
+          {% for n in notices %}
+          <div style="padding:14px; background:var(--bg); border:1px solid var(--border); border-radius:8px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+              <span style="font-weight:700; color:var(--text-900); font-size:14px;">{{ n.title }}</span>
+              <span style="font-size:11px; color:var(--text-500);">{{ n.created_at|date:"M d, Y" }}</span>
+            </div>
+            <p style="font-size:12.5px; color:var(--text-600); line-height:1.5; margin:0;">{{ n.content|truncatechars:180 }}</p>
+          </div>
+          {% empty %}
+          <div style="text-align:center; padding:20px; color:var(--text-500); font-size:13.5px;">No notice board entries found.</div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 5. Transport Routes Results ── -->
+    <div class="search-panel" id="panel-routes" style="margin-bottom:20px;">
+      <div class="card">
+        <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+          <span class="card-title">🚌 Matching Bus Routes</span>
+          <span class="badge badge-active">{{ routes|length }} found</span>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Route No</th>
+                <th>Route Name</th>
+                <th>From</th>
+                <th>To</th>
+                <th>Status</th>
+                <th style="text-align:right;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for r in routes %}
+              <tr>
+                <td style="font-family:monospace; font-weight:700; color:var(--c-primary);">{{ r.route_number }}</td>
+                <td style="font-weight:600; font-size:13px;">{{ r.route_name }}</td>
+                <td style="font-size:13px; color:var(--text-500);">📍 {{ r.start_point }}</td>
+                <td style="font-size:13px; color:var(--text-500);">🏁 {{ r.end_point }}</td>
+                <td><span class="badge badge-{{ r.status }}">{{ r.get_status_display }}</span></td>
+                <td style="text-align:right;">
+                  <a href="{% url 'route_list' %}" class="btn btn-sm btn-outline">View Route</a>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="6" style="text-align:center; padding:20px; color:var(--text-500);">No transport routes found.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 6. Library Books Results ── -->
+    <div class="search-panel" id="panel-books" style="margin-bottom:20px;">
+      <div class="card">
+        <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+          <span class="card-title">📚 Matching Library Books</span>
+          <span class="badge badge-active">{{ books|length }} found</span>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Author</th>
+                <th>ISBN</th>
+                <th>Location</th>
+                <th>Status</th>
+                <th style="text-align:right;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for b in books %}
+              <tr>
+                <td style="font-weight:700; font-size:13px; color:var(--text-900);">{{ b.title }}</td>
+                <td style="font-size:13px; font-weight:500;">{{ b.author }}</td>
+                <td style="font-family:monospace; font-size:12px; color:var(--text-500);">{{ b.isbn }}</td>
+                <td style="font-size:12.5px; color:var(--text-500);">{{ b.rack_location|default:"—" }}</td>
+                <td>
+                  <span class="badge {% if b.copies_available > 0 %}badge-active{% else %}badge-overdue{% endif %}">
+                    {{ b.copies_available }} available / {{ b.total_copies }}
+                  </span>
+                </td>
+                <td style="text-align:right;">
+                  <a href="{% url 'book_list' %}" class="btn btn-sm btn-outline">Reserve / View</a>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="6" style="text-align:center; padding:20px; color:var(--text-500);">No library books found.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function switchSearchTab(tabName) {
+  // Update buttons state
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.style.background = 'transparent';
+    btn.style.color = 'var(--text-600)';
+  });
+  
+  const activeBtn = document.getElementById('tab-' + tabName + '-btn');
+  if (activeBtn) {
+    activeBtn.style.background = 'rgba(37,99,235,0.1)';
+    activeBtn.style.color = 'var(--c-primary)';
+  }
+
+  // Toggle panels
+  document.querySelectorAll('.search-panel').forEach(panel => {
+    if (tabName === 'all') {
+      panel.style.display = 'block';
+    } else {
+      if (panel.id === 'panel-' + tabName) {
+        panel.style.display = 'block';
+      } else {
+        panel.style.display = 'none';
+      }
+    }
+  });
+}
+</script>
+{% endblock %}

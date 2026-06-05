@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block title %}Payment History{% endblock %}
+{% block page_title %}Payment History{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'payment_dashboard' %}">Payments</a></li>
+<li class="breadcrumb-item active">History</li>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h4>Transaction History</h4><p>{{ txns|length }} transaction{{ txns|length|pluralize }}</p></div>
+  <a href="{% url 'payment_dashboard' %}" class="btn btn-outline">← Dashboard</a>
+</div>
+<div class="card">
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr><th>Receipt</th><th>Student</th><th>Amount</th><th>Method</th><th>Transaction Ref</th><th>Date</th><th>Status</th><th style="text-align:right;">Actions</th></tr>
+      </thead>
+      <tbody>
+        {% for txn in txns %}
+        <tr>
+          <td style="font-family:monospace;font-size:12px;color:var(--c-primary);">{{ txn.receipt_number|default:"—" }}</td>
+          <td>
+            <div class="cell-user">
+              <div class="cell-avatar-placeholder">{{ txn.fee_record.student.full_name|first|upper }}</div>
+              <div>
+                <div class="cell-name">{{ txn.fee_record.student.full_name }}</div>
+                <div class="cell-sub">{{ txn.fee_record.student.roll_number }}</div>
+              </div>
+            </div>
+          </td>
+          <td style="font-weight:700;font-size:15px;color:{% if txn.status == 'completed' %}var(--c-success){% elif txn.status == 'failed' %}var(--c-danger){% else %}var(--c-warning){% endif %};">
+            ₹{{ txn.amount|floatformat:0 }}
+          </td>
+          <td><span class="badge badge-primary">{{ txn.get_method_display }}</span></td>
+          <td style="font-family:monospace;font-size:11.5px;color:var(--text-500);">
+            {{ txn.transaction_ref|default:txn.razorpay_payment_id|default:"—"|truncatechars:22 }}
+          </td>
+          <td style="font-size:12px;color:var(--text-500);">
+            {{ txn.paid_at|date:"M d, Y H:i"|default:txn.created_at|date:"M d, Y H:i" }}
+          </td>
+          <td>
+            <span class="badge {% if txn.status == 'completed' %}badge-active{% elif txn.status == 'pending' %}badge-pending{% elif txn.status == 'failed' %}badge-overdue{% else %}badge-inactive{% endif %}">
+              ● {{ txn.get_status_display }}
+            </span>
+            {% if txn.status == 'pending' %}
+            <div style="font-size:10.5px;color:var(--text-500);margin-top:2px;">Awaiting admin approval</div>
+            {% endif %}
+          </td>
+          <td>
+            <div class="row-actions">
+              {% if txn.status == 'completed' %}
+              <a href="{% url 'payment_receipt_pdf' txn.pk %}" class="btn btn-sm btn-outline" style="font-size:11px;padding:4px 10px;">⬇ Receipt PDF</a>
+              {% elif txn.status == 'pending' %}
+              <a href="{% url 'payment_pending' txn.pk %}" class="btn btn-sm btn-outline" style="font-size:11px;">View</a>
+              {% elif txn.status == 'failed' %}
+              <a href="{% url 'payment_failure' txn.pk %}" class="btn btn-sm btn-outline" style="font-size:11px;color:var(--c-danger);">Details</a>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8">
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48"><path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+            <h6>No transactions yet</h6>
+            <p><a href="{% url 'payment_dashboard' %}">Pay a fee to get started</a></p>
+          </div>
+        </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

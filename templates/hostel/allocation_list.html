@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% block title %}Room Allocations — EduAdmin Pro{% endblock %}
+{% block page_title %}Hostel Allocations{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+<li class="breadcrumb-item active">Hostel Allocations</li>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h4>Accommodation Registry</h4>
+    <p>Manage student check-ins, active allocations, and historic stay logs</p>
+  </div>
+  <div style="display:flex;gap:8px;">
+    <a href="{% url 'room_list' %}" class="btn btn-outline">🏢 Rooms Catalog</a>
+    <a href="{% url 'allocation_add' %}" class="btn btn-primary">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="margin-right: 4px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Allocate Room
+    </a>
+  </div>
+</div>
+
+<!-- Status Filters -->
+<div style="margin-bottom:20px;display:flex;gap:8px;flex-wrap:wrap;">
+  <a href="{% url 'allocation_list' %}?status=active" class="btn btn-sm {% if selected_status == 'active' %}btn-primary{% else %}btn-outline{% endif %}">Active Allocations</a>
+  <a href="{% url 'allocation_list' %}?status=checked_out" class="btn btn-sm {% if selected_status == 'checked_out' %}btn-primary{% else %}btn-outline{% endif %}">Checked Out History</a>
+  <a href="{% url 'allocation_list' %}?status=" class="btn btn-sm {% if not selected_status %}btn-primary{% else %}btn-outline{% endif %}">All Stay Records</a>
+</div>
+
+{% if page_obj %}
+<div class="card">
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Student</th>
+          <th>Room No</th>
+          <th>Room Type</th>
+          <th>Allocated On</th>
+          <th>Checkout On</th>
+          <th>Status</th>
+          <th style="text-align:right;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for alloc in page_obj %}
+        <tr>
+          <td>
+            <div style="font-weight:700;color:var(--text-900);">{{ alloc.student.full_name }}</div>
+            <div style="font-size:11.5px;color:var(--text-500);">Roll: {{ alloc.student.roll_number }} · Dept: {{ alloc.student.department.code }}</div>
+          </td>
+          <td><strong style="color:var(--c-primary);font-size:14px;">Room {{ alloc.room.room_number }}</strong></td>
+          <td><span class="badge badge-purple">{{ alloc.room.get_room_type_display }}</span></td>
+          <td style="font-size:13px;">{{ alloc.allocated_date|date:"M d, Y" }}</td>
+          <td style="font-size:13px;color:var(--text-500);">
+            {% if alloc.checkout_date %}{{ alloc.checkout_date|date:"M d, Y" }}{% else %}—{% endif %}
+          </td>
+          <td>
+            {% if alloc.status == 'active' %}
+            <span class="badge badge-active">Active Stay</span>
+            {% else %}
+            <span class="badge badge-inactive">Checked Out</span>
+            {% endif %}
+          </td>
+          <td style="text-align:right;">
+            {% if alloc.status == 'active' %}
+            <a href="{% url 'allocation_checkout' alloc.pk %}" class="btn btn-sm btn-outline" style="color:var(--c-danger);">Checkout</a>
+            {% else %}
+            <span style="font-size:12px;color:var(--text-400);">Completed</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if page_obj.has_other_pages %}
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-top:1px solid var(--border);">
+    <div style="font-size:13px;color:var(--text-500);">
+      Showing page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+    </div>
+    <div style="display:flex;gap:6px;">
+      {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}&status={{ selected_status }}" class="btn btn-sm btn-outline">Previous</a>
+      {% endif %}
+      {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}&status={{ selected_status }}" class="btn btn-sm btn-outline">Next</a>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% else %}
+<div class="card">
+  <div class="empty-state" style="padding:60px 20px;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="52" height="52" style="margin: 0 auto 12px; color: var(--text-400);"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M22 9l-3 3-2-2"/></svg>
+    <h6>No allocation records found</h6>
+    <p style="margin-bottom:16px; color: var(--text-500);">Allocate hostel rooms to active students to start stay records.</p>
+    <a href="{% url 'allocation_add' %}" class="btn btn-primary">+ Allocate Room</a>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

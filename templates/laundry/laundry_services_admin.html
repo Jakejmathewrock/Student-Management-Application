@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block title %}Manage Laundry Services{% endblock %}
+{% block page_title %}Laundry Services{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+<li class="breadcrumb-item active">Laundry Services</li>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h4>Laundry Service Catalogue</h4>
+    <p>{{ services|length }} services configured with per-item pricing</p>
+  </div>
+  <a href="{% url 'laundry_portal' %}" class="btn btn-outline">🧺 Student View</a>
+</div>
+
+<!-- Group by category -->
+{% regroup services by get_category_display as service_groups %}
+{% for group in service_groups %}
+<div class="card" style="margin-bottom:16px;">
+  <div class="card-header" style="background:rgba(59,130,246,0.05);">
+    <span class="card-title">{{ group.list.0.emoji }} {{ group.grouper }}</span>
+    <span class="badge badge-primary">{{ group.list|length }} services</span>
+  </div>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr><th>Service</th><th>Description</th><th>Price</th><th>Unit</th><th>Turnaround</th><th>Status</th><th style="text-align:right;">Toggle</th></tr>
+      </thead>
+      <tbody>
+        {% for svc in group.list %}
+        <tr>
+          <td>
+            <span style="font-size:18px;margin-right:8px;">{{ svc.emoji }}</span>
+            <span style="font-weight:600;color:var(--text-900);">{{ svc.name }}</span>
+          </td>
+          <td style="color:var(--text-500);font-size:12.5px;">{{ svc.description|default:"—" }}</td>
+          <td style="font-size:16px;font-weight:800;color:var(--c-success);">₹{{ svc.price_per_item }}</td>
+          <td style="color:var(--text-500);font-size:12.5px;">{{ svc.unit }}</td>
+          <td><span class="badge badge-primary">⏱ {{ svc.turnaround_hrs }}h</span></td>
+          <td>
+            <span class="badge {% if svc.is_available %}badge-active{% else %}badge-inactive{% endif %}">
+              ● {% if svc.is_available %}Available{% else %}Disabled{% endif %}
+            </span>
+          </td>
+          <td style="text-align:right;">
+            <a href="{% url 'laundry_service_toggle' svc.pk %}" class="btn btn-sm {% if svc.is_available %}btn-outline{% else %}btn-primary{% endif %}" style="font-size:11.5px;">
+              {% if svc.is_available %}Disable{% else %}Enable{% endif %}
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endfor %}
+
+<!-- Price Summary -->
+<div class="card" style="padding:20px 24px;">
+  <div style="font-size:13px;font-weight:700;color:var(--text-500);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;">💰 Price Range Overview</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;">
+    {% regroup services by get_category_display as cat_groups %}
+    {% for g in cat_groups %}
+    <div style="padding:12px 14px;background:var(--bg);border-radius:var(--radius-sm);border:1px solid var(--border);">
+      <div style="font-size:12px;font-weight:700;color:var(--text-700);margin-bottom:6px;">{{ g.list.0.emoji }} {{ g.grouper }}</div>
+      <div style="font-size:12px;color:var(--text-500);">
+        Min: <strong style="color:var(--c-success);">₹{% with prices=g.list %}{% for s in prices %}{% if forloop.first %}{{ s.price_per_item }}{% endif %}{% endfor %}{% endwith %}</strong>
+      </div>
+      <div style="font-size:11.5px;color:var(--text-500);margin-top:2px;">{{ g.list|length }} service{{ g.list|length|pluralize }}</div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'food_menu_admin' %}">Food Menu</a></li>
+<li class="breadcrumb-item active">{{ title }}</li>
+{% endblock %}
+
+{% block content %}
+<div style="max-width:560px;">
+<form method="POST" class="form-card">{% csrf_token %}
+  <div class="form-section">
+    <div class="form-grid">
+      <div class="form-full"><label class="field-label">Name</label>{{ form.name }}</div>
+      <div class="form-full"><label class="field-label">Description</label>{{ form.description }}</div>
+      <div><label class="field-label">Category</label>{{ form.category }}</div>
+      <div><label class="field-label">Price (₹)</label>{{ form.price }}</div>
+      <div><label class="field-label">Emoji</label>{{ form.emoji }}</div>
+      <div style="display:flex;align-items:flex-end;"><label>{{ form.is_available }} Available</label></div>
+    </div>
+  </div>
+  <div class="form-footer">
+    <a href="{% url 'food_menu_admin' %}" class="btn btn-secondary">Cancel</a>
+    <button type="submit" class="btn btn-primary">Save</button>
+  </div>
+</form>
+</div>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}Payment Pending Approval{% endblock %}
+{% block content %}
+<div style="max-width:520px;margin:0 auto;text-align:center;">
+  <div class="card" style="padding:48px 36px;">
+    <div style="width:80px;height:80px;border-radius:50%;background:rgba(245,158,11,0.12);border:3px solid var(--c-warning);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:spin 3s linear infinite;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2.5" width="38" height="38"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    </div>
+    <h2 style="font-size:22px;font-weight:800;color:var(--text-900);margin-bottom:6px;">Payment Pending ⏳</h2>
+    <p style="color:var(--text-500);font-size:13.5px;margin-bottom:24px;">Your payment has been submitted and is awaiting admin verification. You will be notified once approved.</p>
+    <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:24px;text-align:left;font-size:13.5px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="color:var(--text-500);">Amount Submitted</span><span style="font-weight:700;color:var(--c-warning);">₹{{ txn.amount|floatformat:0 }}</span></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="color:var(--text-500);">UPI Ref</span><span style="font-family:monospace;font-size:12px;">{{ txn.transaction_ref|default:"—" }}</span></div>
+      <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-500);">Submitted At</span><span>{{ txn.created_at|date:"M d, Y H:i" }}</span></div>
+    </div>
+    <div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.15);border-radius:8px;padding:12px;font-size:12.5px;color:var(--text-500);margin-bottom:20px;">
+      ℹ️ Admin review typically takes <strong>1–2 working days</strong>. Keep your UPI transaction screenshot as proof.
+    </div>
+    <div style="display:flex;gap:10px;justify-content:center;">
+      <a href="{% url 'payment_history' %}" class="btn btn-primary">View All Transactions</a>
+      <a href="{% url 'payment_dashboard' %}" class="btn btn-secondary">Back to Payments</a>
+    </div>
+  </div>
+</div>
+<style>@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}</style>
+{% endblock %}
